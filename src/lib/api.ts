@@ -282,10 +282,6 @@ export const proofApi = {
       createdAt: new Date().toISOString(),
       source: "local",
     };
-    proof.signature = await hmacHex(
-      MOCK_KEYS.attestor,
-      canonical(txProofSignableBody(proof)),
-    );
 
     // Try the real Proof Fabric Protocol service via our server route.
     try {
@@ -317,6 +313,9 @@ export const proofApi = {
     } catch {
       await delay(500);
     }
+
+    // Sign LAST, over the finalized body (attestor label may have changed above).
+    proof.signature = await hmacHex(MOCK_KEYS.attestor, canonical(txProofSignableBody(proof)));
     return proof;
   },
 
