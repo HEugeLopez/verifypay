@@ -102,6 +102,13 @@ use **Reset demo** in the header to clear it.
 
 ## Deploy (Vercel)
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FHEugeLopez%2Fverifypay&env=TNG_IDENTITY_ENV_HASH,TNG_VERIFIER_DEFINITION_ID,TNG_IDENTITY_API_KEY,PROOF_API_KEY,APP_PASSWORD&envDescription=Keys%20and%20settings%20for%20TNG%20Identity%2C%20Proof%20Fabric%2C%20and%20the%20access%20gate&envLink=https%3A%2F%2Fgithub.com%2FHEugeLopez%2Fverifypay%23live-api-setup)
+
+Click the button above — Vercel clones the repo and prompts for the env vars
+below in one screen. (Suggested values: `TNG_IDENTITY_ENV_HASH=1cf74197b85a83ee`,
+`TNG_VERIFIER_DEFINITION_ID=bankAccountCredential`; the rest are your keys + a
+chosen `APP_PASSWORD`.)
+
 This app needs a Node server (the `/api/*` route handlers run server-side), so it
 must be deployed somewhere that runs Next.js — **not** GitHub Pages. Vercel works
 out of the box:
