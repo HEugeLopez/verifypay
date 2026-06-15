@@ -66,10 +66,28 @@ export const proofFabric = {
     });
   },
 
-  verify(feaPayload: unknown, signature: string): Promise<FEAVerifyResult> {
+  verify(
+    feaPayload: unknown,
+    signature: string,
+    signatureVersion?: string,
+  ): Promise<FEAVerifyResult> {
     return pfp<FEAVerifyResult>("/api/fea/verify", {
       method: "POST",
-      body: JSON.stringify({ fea_payload: feaPayload, signature }),
+      body: JSON.stringify({
+        fea_payload: feaPayload,
+        signature,
+        ...(signatureVersion ? { signature_version: signatureVersion } : {}),
+      }),
     });
+  },
+
+  // Authoritative re-verification by id (server-side, version-agnostic).
+  publicVerify(feaId: string): Promise<{
+    fea_id: string;
+    signature_valid: boolean;
+    signature_version?: string;
+    issuer_id?: string;
+  }> {
+    return pfp(`/api/public/verify/${encodeURIComponent(feaId)}`, { method: "GET" });
   },
 };

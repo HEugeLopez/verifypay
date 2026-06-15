@@ -446,7 +446,11 @@ export const proofApi = {
         const res = await fetch("/api/proof/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ feaPayload: txProof.feaPayload, signature }),
+          body: JSON.stringify({
+            feaPayload: txProof.feaPayload,
+            signature,
+            signatureVersion: txProof.feaSignatureVersion,
+          }),
         });
         const data = await res.json();
         liveOk = Boolean(data?.ok && data.result?.valid);
