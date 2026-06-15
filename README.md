@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VerifyPay — identity-verified payments POC
 
-## Getting Started
+A proof-of-concept payment processor where **every payment is gated by identity
+verification and bound to a verifiable cryptographic proof**. The demo use case is
+a **loan repayment** flowing from a Borrower to a Lender.
 
-First, run the development server:
+## What it does
+
+Two switchable "accounts" (Borrower · Amara Okafor, Lender · Northwind Capital),
+each with a wallet, profile, and transaction history. The repayment flow:
+
+1. **Verify identity** → a signed, verifiable **identity certificate** is issued.
+2. **Pay** → the repayment settles between wallets.
+3. **Seal proof** → a **transaction proof** binds the exact payment to the exact
+   identity, then a **"proof of everything"** Merkle root binds identity +
+   payment + proof under one notary signature.
+4. **Receipt** → carries the attached identity verification.
+5. **Verify** (Proofs tab) → independently **recomputes every hash and re-checks
+   every signature**. A *Simulate tampering* toggle alters the payment amount and
+   shows the affected checks fail — the proofs are genuinely tamper-evident.
+
+## The proofs are real
+
+`src/lib/crypto.ts` uses the Web Crypto API for SHA-256 hashing and HMAC-SHA256
+signatures. Verification re-derives everything from stored data, so nothing is
+faked. (The signing keys are inlined client-side **only** for the offline demo —
+in production they belong behind your APIs.)
+
+## Wiring in real APIs
+
+All network calls are mocked behind a single seam: **`src/lib/api.ts`**
+(`identityApi.verify`, `paymentsApi.execute`,
+`proofApi.createTransactionProof / createMasterProof / verifyMasterProof`).
+Replace each method body with a real `fetch(...)`; the types in
+`src/lib/types.ts` and the rest of the app stay the same.
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev   # http://localhost:3000  (preview config uses 3003)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Stack: Next.js 16 (App Router, Turbopack) · React 19 · Tailwind v4 · TypeScript.
+State lives in React context with localStorage persistence (`src/lib/store.tsx`);
+use **Reset demo** in the header to clear it.

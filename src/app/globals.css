@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ----------------------------------------------------------------------------
+   VerifyPay — clean fintech theme
+   Light, neutral surfaces · trust-blue primary · emerald "verified" accent
+---------------------------------------------------------------------------- */
+@theme {
+  --color-canvas: #eef1f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #f7f9fc;
+  --color-line: #e5e9f0;
+  --color-line-strong: #d3d9e4;
+
+  --color-ink: #0d1626;
+  --color-ink-muted: #56617a;
+  --color-ink-subtle: #8a93a6;
+
+  --color-brand: #2563eb;
+  --color-brand-strong: #1d4ed8;
+  --color-brand-ink: #ffffff;
+  --color-brand-soft: #e9f0ff;
+
+  --color-verify: #0f9d6b;
+  --color-verify-strong: #0a8159;
+  --color-verify-soft: #e3f6ee;
+
+  --color-success: #16a34a;
+  --color-warn: #c2780c;
+  --color-warn-soft: #fbf0dd;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fdecec;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-card: 16px;
+
+  --shadow-card: 0 1px 2px rgba(13, 22, 38, 0.04), 0 8px 24px -12px rgba(13, 22, 38, 0.12);
+  --shadow-pop: 0 24px 60px -20px rgba(13, 22, 38, 0.28);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(1200px 600px at 100% -10%, #e7edfb 0%, transparent 55%),
+    radial-gradient(900px 500px at -10% 0%, #eafaf3 0%, transparent 45%),
+    var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
+
+/* thin, tasteful scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+@keyframes vp-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes vp-pop {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes vp-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes vp-pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(15, 157, 107, 0.35); }
+  70% { box-shadow: 0 0 0 12px rgba(15, 157, 107, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 157, 107, 0); }
+}
+@keyframes vp-bar {
+  from { width: 0%; }
+}
+
+.vp-fade-up { animation: vp-fade-up 0.35s ease both; }
+.vp-pop { animation: vp-pop 0.25s ease both; }
+.vp-spin { animation: vp-spin 0.7s linear infinite; }
+.vp-pulse-ring { animation: vp-pulse-ring 1.6s ease-out infinite; }
