@@ -18,9 +18,7 @@ import {
 } from "./crypto";
 import type {
   Account,
-  AssuranceLevel,
   IdentityCertificate,
-  IdentityClaims,
   MasterProof,
   MerkleLeaf,
   Transaction,
@@ -61,10 +59,11 @@ function certSignableBody(c: IdentityCertificate) {
     subjectAccountId: c.subjectAccountId,
     issuer: c.issuer,
     method: c.method,
-    assuranceLevel: c.assuranceLevel,
-    claims: c.claims,
+    assuranceLevel: c.assuranceLevel ?? null,
+    subject: c.subject,
+    attributes: c.attributes,
     verifiedAt: c.verifiedAt,
-    expiresAt: c.expiresAt,
+    expiresAt: c.expiresAt ?? null,
     subjectHash: c.subjectHash,
   };
 }
@@ -110,45 +109,111 @@ export async function certContentHash(c: IdentityCertificate): Promise<string> {
   return hashObject(certSignableBody(c));
 }
 
-// --- Identity API -----------------------------------------------------------
+// --- Identity API (real TNG verifier flow) ----------------------------------
 
-export interface VerifyOptions {
-  assuranceLevel?: AssuranceLevel;
+export interface PresentationRequest {
+  correlationId: string;
+  definitionId: string;
+  authRequestURI: string;
+}
+
+interface TngClaim {
+  claimName: string;
+  claimValue: string | number | boolean;
+  dataType?: string;
+}
+interface TngCredential {
+  id?: string;
+  types?: string[];
+  claims: TngClaim[];
+}
+export type IdentityStatus = "created" | "scanned" | "failed" | "valid" | "error";
+
+export interface PollResult {
+  status: IdentityStatus;
+  cert?: IdentityCertificate;
+}
+
+// Pick the best display subject from the verified attributes.
+function pickSubject(attrs: { name: string; value: string }[]): string {
+  const byName = (n: string) =>
+    attrs.find((a) => a.name.toLowerCase() === n.toLowerCase())?.value;
+  return (
+    byName("fullName") ||
+    byName("name") ||
+    byName("legalName") ||
+    byName("givenName") ||
+    byName("email") ||
+    attrs[0]?.value ||
+    "Verified holder"
+  );
 }
 
 export const identityApi = {
-  async verify(
-    account: Account,
-    opts: VerifyOptions = {},
-  ): Promise<IdentityCertificate> {
-    await delay(900);
-
-    const claims: IdentityClaims = {
-      legalName: account.profile.legalName,
-      dateOfBirth: account.profile.dateOfBirth,
-      nationality: account.profile.nationality,
-      documentType: account.profile.documentType,
-      documentNumber: account.profile.documentNumber,
+  // Step 1 — create a TNG presentation request (returns the QR/deeplink URI).
+  async startVerification(): Promise<PresentationRequest> {
+    const res = await fetch("/api/identity/request", { method: "POST" });
+    const data = await res.json();
+    if (!data?.ok) {
+      throw new Error(data?.error ?? "Failed to start verification");
+    }
+    return {
+      correlationId: data.correlationId,
+      definitionId: data.definitionId,
+      authRequestURI: data.authRequestURI,
     };
+  },
 
+  // Step 2 — poll until the holder's wallet completes the presentation.
+  // On "valid", maps the verified credentials into a signed certificate.
+  async pollStatus(
+    account: Account,
+    req: PresentationRequest,
+  ): Promise<PollResult> {
+    const res = await fetch(
+      `/api/identity/status?correlationId=${encodeURIComponent(req.correlationId)}`,
+    );
+    const data = await res.json();
+    if (!data?.ok) throw new Error(data?.error ?? "Failed to read verification status");
+
+    const status = data.status as IdentityStatus;
+    if (status !== "valid") return { status };
+
+    const credentials: TngCredential[] = data.credentials ?? [];
+    const attributes = credentials.flatMap((c) =>
+      c.claims.map((cl) => ({
+        name: cl.claimName,
+        value: String(cl.claimValue),
+        dataType: cl.dataType,
+      })),
+    );
+    const credentialTypes = credentials.flatMap((c) => c.types ?? []);
     const verifiedAt = new Date().toISOString();
-    const subjectHash = await hashObject(claims);
+    const subjectHash = await hashObject(attributes);
 
     const cert: IdentityCertificate = {
       id: genId("idcert"),
       subjectAccountId: account.id,
-      issuer: "Veriff Trust Services",
-      method: ["Government ID scan", "Liveness / selfie match", "Sanctions & PEP screen"],
-      assuranceLevel: opts.assuranceLevel ?? "IAL2",
-      claims,
+      issuer: "TNG Identity (Teranode)",
+      method: ["Verifiable credential presentation", "OpenID4VP / SIOP"],
+      subject: pickSubject(attributes),
+      attributes,
       verifiedAt,
       expiresAt: addYears(verifiedAt, 1),
       subjectHash,
       signature: "",
       status: "valid",
+      source: "tng",
+      tng: {
+        correlationId: req.correlationId,
+        definitionId: req.definitionId,
+        credentialId: credentials[0]?.id,
+        credentialTypes: credentialTypes.length ? credentialTypes : undefined,
+      },
     };
+    // VerifyPay's own attestation that it verified this presentation via TNG.
     cert.signature = await hmacHex(MOCK_KEYS.issuer, canonical(certSignableBody(cert)));
-    return cert;
+    return { status, cert };
   },
 };
 
@@ -297,10 +362,10 @@ export const proofApi = {
     const checks: VerificationCheck[] = [];
 
     // 1. Identity claims integrity
-    const recomputedSubject = await hashObject(cert.claims);
+    const recomputedSubject = await hashObject(cert.attributes);
     checks.push({
       label: "Identity claims integrity",
-      detail: "Re-hash subject claims and match the certificate's subject hash.",
+      detail: "Re-hash the verified attributes and match the certificate's subject hash.",
       ok: recomputedSubject === cert.subjectHash,
     });
 

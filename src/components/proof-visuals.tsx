@@ -26,6 +26,14 @@ import {
   X,
 } from "./icons";
 
+// Turn a raw claim name ("dateOfBirth", "full_name") into a readable label.
+function prettyLabel(name: string): string {
+  return name
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
 // --- Identity certificate ---------------------------------------------------
 
 export function CertificateCard({ cert }: { cert: IdentityCertificate }) {
@@ -47,11 +55,13 @@ export function CertificateCard({ cert }: { cert: IdentityCertificate }) {
       </div>
 
       <div className="grid gap-x-6 gap-y-1 px-5 py-4 sm:grid-cols-2">
-        <Field label="Subject" value={cert.claims.legalName} />
-        <Field label="Assurance level" value={<Badge tone="brand">{cert.assuranceLevel}</Badge>} />
-        <Field label="Date of birth" value={formatDate(cert.claims.dateOfBirth)} />
-        <Field label="Nationality" value={cert.claims.nationality} />
-        <Field label="Document" value={`${cert.claims.documentType} ${cert.claims.documentNumber}`} />
+        <Field label="Subject" value={cert.subject} />
+        {cert.assuranceLevel && (
+          <Field label="Assurance level" value={<Badge tone="brand">{cert.assuranceLevel}</Badge>} />
+        )}
+        {cert.attributes.map((a) => (
+          <Field key={a.name} label={prettyLabel(a.name)} value={a.value} />
+        ))}
         <Field label="Verified" value={formatDateTime(cert.verifiedAt)} />
       </div>
 
@@ -63,13 +73,21 @@ export function CertificateCard({ cert }: { cert: IdentityCertificate }) {
               {m}
             </Badge>
           ))}
+          {cert.tng?.credentialTypes?.map((t) => (
+            <Badge key={t} tone="verify">
+              {t}
+            </Badge>
+          ))}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 border-t border-line bg-surface-2 px-5 py-3">
         <HashChip label="subject" value={cert.subjectHash} tone="verify" />
         <HashChip label="signature" value={cert.signature} />
-        <span className="text-xs text-ink-subtle">expires {formatDate(cert.expiresAt)}</span>
+        {cert.tng && <HashChip label="correlation" value={cert.tng.correlationId} />}
+        {cert.expiresAt && (
+          <span className="text-xs text-ink-subtle">expires {formatDate(cert.expiresAt)}</span>
+        )}
       </div>
     </Card>
   );
@@ -397,9 +415,11 @@ export function ReceiptCard({
         <div className="rounded-xl border border-verify-soft bg-verify-soft/50 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-ink">{cert.claims.legalName}</p>
+              <p className="text-sm font-semibold text-ink">{cert.subject}</p>
               <p className="text-xs text-ink-muted">
-                {cert.issuer} · {cert.assuranceLevel} · verified {formatDate(cert.verifiedAt)}
+                {cert.issuer}
+                {cert.assuranceLevel ? ` · ${cert.assuranceLevel}` : ""} · verified{" "}
+                {formatDate(cert.verifiedAt)}
               </p>
             </div>
             <Badge tone="verify" icon={<Check className="size-3.5" />}>

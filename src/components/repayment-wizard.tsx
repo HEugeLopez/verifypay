@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import QRCode from "qrcode";
 import { identityApi, paymentsApi, proofApi } from "@/lib/api";
+import type { IdentityStatus, PresentationRequest } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
 import { useApp } from "@/lib/store";
 import type {
@@ -20,6 +22,7 @@ import {
   ArrowRight,
   Check,
   Fingerprint,
+  Link as LinkIcon,
   Lock,
   Receipt as ReceiptIcon,
   Scale,
@@ -31,6 +34,7 @@ import {
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type Step = "identity" | "review" | "sealing" | "done";
+type IdPhase = "intro" | "awaiting" | "issued" | "error";
 
 const STEPS: { key: Step; label: string; icon: React.ReactNode }[] = [
   { key: "identity", label: "Identity", icon: <Fingerprint className="size-4" /> },
@@ -39,19 +43,36 @@ const STEPS: { key: Step; label: string; icon: React.ReactNode }[] = [
   { key: "done", label: "Receipt", icon: <ShieldCheck className="size-4" /> },
 ];
 
-const IDENTITY_STAGES = [
-  "Scanning government ID",
-  "Matching liveness selfie",
-  "Screening sanctions & PEP lists",
-  "Issuing signed certificate",
-];
-
 const SEAL_STAGES = [
   "Submitting payment",
   "Settling funds between wallets",
   "Creating transaction proof",
   "Sealing proof of everything",
 ];
+
+// A QR code for the wallet to scan, rendered from the TNG authRequestURI.
+function WalletQR({ value }: { value: string }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    let active = true;
+    QRCode.toDataURL(value, {
+      width: 220,
+      margin: 1,
+      color: { dark: "#0d1626", light: "#ffffff" },
+    })
+      .then((url) => active && setSrc(url))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [value]);
+  return src ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="Scan with your wallet" width={220} height={220} className="rounded-xl" />
+  ) : (
+    <div className="size-[220px] animate-pulse rounded-xl bg-surface-2" />
+  );
+}
 
 export function RepaymentWizard({
   onClose,
@@ -64,13 +85,25 @@ export function RepaymentWizard({
     useApp();
 
   const [step, setStep] = useState<Step>("identity");
-  const [idPhase, setIdPhase] = useState<"intro" | "running" | "issued">("intro");
+  const [idPhase, setIdPhase] = useState<IdPhase>("intro");
   const [stage, setStage] = useState(0);
+
+  const [presReq, setPresReq] = useState<PresentationRequest | null>(null);
+  const [idStatus, setIdStatus] = useState<IdentityStatus | null>(null);
+  const [idError, setIdError] = useState<string | null>(null);
 
   const [cert, setCert] = useState<IdentityCertificate | null>(null);
   const [tx, setTx] = useState<Transaction | null>(null);
   const [txProof, setTxProof] = useState<TransactionProof | null>(null);
   const [master, setMaster] = useState<MasterProof | null>(null);
+
+  // Stop polling when the wizard unmounts.
+  const pollingRef = useRef(false);
+  useEffect(() => {
+    return () => {
+      pollingRef.current = false;
+    };
+  }, []);
 
   const installmentNo = loan.installmentsPaid + 1;
   const amount = loan.installment;
@@ -80,18 +113,38 @@ export function RepaymentWizard({
 
   // --- step actions ---------------------------------------------------------
 
+  // Real TNG verifier flow: create a presentation request, show its QR, and
+  // poll until the holder's wallet completes (status "valid").
   const runIdentity = async () => {
-    setIdPhase("running");
-    setStage(0);
-    const apiP = identityApi.verify(borrower);
-    for (let i = 0; i < IDENTITY_STAGES.length; i++) {
-      await wait(430);
-      setStage(i + 1);
+    setIdPhase("awaiting");
+    setIdError(null);
+    setIdStatus(null);
+    setPresReq(null);
+    try {
+      const req = await identityApi.startVerification();
+      setPresReq(req);
+      pollingRef.current = true;
+      while (pollingRef.current) {
+        await wait(2500);
+        if (!pollingRef.current) return;
+        const { status, cert: issued } = await identityApi.pollStatus(borrower, req);
+        setIdStatus(status);
+        if (status === "valid" && issued) {
+          addCertificate(issued);
+          setCert(issued);
+          setIdPhase("issued");
+          return;
+        }
+        if (status === "failed" || status === "error") {
+          setIdError(`Verification ${status}. Please try again.`);
+          setIdPhase("error");
+          return;
+        }
+      }
+    } catch (e) {
+      setIdError(e instanceof Error ? e.message : "Verification failed");
+      setIdPhase("error");
     }
-    const c = await apiP;
-    addCertificate(c);
-    setCert(c);
-    setIdPhase("issued");
   };
 
   const runSeal = async () => {
@@ -179,7 +232,9 @@ export function RepaymentWizard({
           {step === "identity" && (
             <IdentityStep
               phase={idPhase}
-              stage={stage}
+              status={idStatus}
+              error={idError}
+              presReq={presReq}
               cert={cert}
               borrower={borrower}
               onStart={runIdentity}
@@ -250,16 +305,20 @@ export function RepaymentWizard({
 
 function IdentityStep({
   phase,
-  stage,
+  status,
+  error,
+  presReq,
   cert,
   borrower,
   onStart,
   onContinue,
 }: {
-  phase: "intro" | "running" | "issued";
-  stage: number;
+  phase: IdPhase;
+  status: IdentityStatus | null;
+  error: string | null;
+  presReq: PresentationRequest | null;
   cert: IdentityCertificate | null;
-  borrower: { displayName: string; accent: string; profile: { legalName: string; documentType: string; documentNumber: string; addressCity: string } };
+  borrower: { displayName: string; accent: string; profile: { legalName: string } };
   onStart: () => void;
   onContinue: () => void;
 }) {
@@ -273,18 +332,15 @@ function IdentityStep({
             </span>
             <h3 className="text-base font-semibold text-ink">Verify your identity</h3>
             <p className="max-w-sm text-sm text-ink-muted">
-              Before any money moves, we confirm who you are and issue a signed, verifiable
-              certificate that travels with the payment.
+              Before any money moves, present a verifiable credential from your TNG Identity wallet.
+              The verified result is bound to the payment.
             </p>
           </div>
           <div className="mb-5 flex items-center gap-3 rounded-xl border border-line bg-surface-2 px-4 py-3">
             <Avatar name={borrower.displayName} accent={borrower.accent} />
             <div>
               <p className="text-sm font-semibold text-ink">{borrower.profile.legalName}</p>
-              <p className="text-xs text-ink-subtle">
-                {borrower.profile.documentType} {borrower.profile.documentNumber} ·{" "}
-                {borrower.profile.addressCity}
-              </p>
+              <p className="text-xs text-ink-subtle">Verified with TNG Identity · OpenID4VP</p>
             </div>
           </div>
           <Button variant="verify" className="w-full" onClick={onStart}>
@@ -294,15 +350,48 @@ function IdentityStep({
         </div>
       )}
 
-      {phase === "running" && (
-        <div className="vp-fade-up">
-          <div className="mb-6 flex flex-col items-center text-center">
-            <span className="mb-3 flex size-14 items-center justify-center rounded-2xl bg-verify-soft text-verify">
-              <Spinner className="size-7 vp-spin" />
+      {phase === "awaiting" && (
+        <div className="flex flex-col items-center vp-fade-up">
+          <h3 className="mb-1 text-base font-semibold text-ink">Scan with your wallet</h3>
+          <p className="mb-5 max-w-sm text-center text-sm text-ink-muted">
+            Open your TNG Identity wallet and scan this code to present your credential.
+          </p>
+          {presReq ? (
+            <WalletQR value={presReq.authRequestURI} />
+          ) : (
+            <div className="flex size-[220px] items-center justify-center">
+              <Spinner className="size-7 text-verify vp-spin" />
+            </div>
+          )}
+          <div className="mt-5 flex items-center gap-2 rounded-full bg-surface-2 px-4 py-2 text-sm">
+            <Spinner className="size-4 text-verify vp-spin" />
+            <span className="text-ink-muted">
+              {status === "scanned" ? "Credential scanned — awaiting approval…" : "Waiting for wallet…"}
             </span>
-            <h3 className="text-base font-semibold text-ink">Verifying…</h3>
           </div>
-          <StageList stages={IDENTITY_STAGES} current={stage} tone="verify" />
+          {presReq && (
+            <a
+              href={presReq.authRequestURI}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-brand hover:underline"
+            >
+              <LinkIcon className="size-3.5" />
+              Open in wallet app
+            </a>
+          )}
+        </div>
+      )}
+
+      {phase === "error" && (
+        <div className="flex flex-col items-center text-center vp-fade-up">
+          <span className="mb-3 flex size-14 items-center justify-center rounded-2xl bg-danger-soft text-danger">
+            <X className="size-7" />
+          </span>
+          <h3 className="text-base font-semibold text-ink">Verification couldn&apos;t complete</h3>
+          <p className="mb-5 mt-1 max-w-sm text-sm text-ink-muted">{error}</p>
+          <Button variant="verify" onClick={onStart}>
+            <ShieldCheck className="size-4" />
+            Try again
+          </Button>
         </div>
       )}
 
@@ -391,7 +480,7 @@ function ReviewStep({
         <div className="flex-1">
           <p className="text-sm font-semibold text-ink">Identity verified</p>
           <p className="text-xs text-ink-muted">
-            {cert.claims.legalName} · {cert.assuranceLevel} · {cert.issuer}
+            {cert.subject} · {cert.issuer}
           </p>
         </div>
         <Badge tone="verify" icon={<Check className="size-3.5" />}>

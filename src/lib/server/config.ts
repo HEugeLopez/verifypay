@@ -30,14 +30,28 @@ export const config = {
       return Boolean(process.env.PROOF_API_KEY);
     },
   },
-  // TNG Identity — verifiable credentials issuer/verifier (env-specific paths)
+  // TNG Identity — verifiable-credentials verifier (OpenID4VP / SIOP)
+  // Base URL: https://<host>/products/web/<envHash>/verifier
   tngIdentity: {
-    baseUrl: process.env.TNG_IDENTITY_BASE_URL || "",
+    host: process.env.TNG_IDENTITY_HOST || "identity.products.teranode.group",
+    get envHash() {
+      return requireEnv("TNG_IDENTITY_ENV_HASH");
+    },
     get apiKey() {
       return requireEnv("TNG_IDENTITY_API_KEY");
     },
+    get definitionId() {
+      return requireEnv("TNG_VERIFIER_DEFINITION_ID");
+    },
+    get verifierBaseUrl() {
+      return `https://${this.host}/products/web/${this.envHash}/verifier`;
+    },
     get configured() {
-      return Boolean(process.env.TNG_IDENTITY_API_KEY && process.env.TNG_IDENTITY_BASE_URL);
+      return Boolean(
+        process.env.TNG_IDENTITY_API_KEY &&
+          process.env.TNG_IDENTITY_ENV_HASH &&
+          process.env.TNG_VERIFIER_DEFINITION_ID,
+      );
     },
   },
 };

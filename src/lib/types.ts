@@ -45,28 +45,33 @@ export interface Loan {
 
 // --- Identity ---------------------------------------------------------------
 
-export type AssuranceLevel = "IAL2" | "IAL3";
-
-export interface IdentityClaims {
-  legalName: string;
-  dateOfBirth: string;
-  nationality: string;
-  documentType: string;
-  documentNumber: string; // masked
+// A single verified attribute returned by the identity provider.
+export interface IdentityAttribute {
+  name: string; // claim name, e.g. "email", "fullName"
+  value: string;
+  dataType?: string;
 }
 
 export interface IdentityCertificate {
   id: string;
   subjectAccountId: string;
   issuer: string; // verification provider
-  method: string[]; // e.g. ["Document scan", "Liveness", "Database match"]
-  assuranceLevel: AssuranceLevel;
-  claims: IdentityClaims;
+  method: string[]; // e.g. ["Verifiable credential presentation", "OpenID4VP / SIOP"]
+  assuranceLevel?: string;
+  subject: string; // primary display subject (name/email)
+  attributes: IdentityAttribute[]; // the actual verified claims
   verifiedAt: string; // ISO datetime
-  expiresAt: string; // ISO datetime
-  subjectHash: string; // sha-256 of canonical claims
-  signature: string; // HMAC-SHA256 over the certificate body (issuer key)
+  expiresAt?: string; // ISO datetime
+  subjectHash: string; // sha-256 of canonical attributes
+  signature: string; // HMAC attestation over the certificate body
   status: "valid" | "expired" | "revoked";
+  source: "tng";
+  tng?: {
+    correlationId: string;
+    definitionId: string;
+    credentialId?: string;
+    credentialTypes?: string[];
+  };
 }
 
 // --- Transaction ------------------------------------------------------------
