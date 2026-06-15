@@ -12,6 +12,7 @@ import {
 import type {
   Account,
   IdentityCertificate,
+  IssuedCredential,
   Loan,
   MasterProof,
   Transaction,
@@ -35,6 +36,7 @@ interface PersistedState {
   txProofs: TransactionProof[];
   masterProofs: MasterProof[];
   activeAccountId: string;
+  issuedCredential: IssuedCredential | null;
 }
 
 function freshState(): PersistedState {
@@ -46,6 +48,7 @@ function freshState(): PersistedState {
     txProofs: [],
     masterProofs: [],
     activeAccountId: BORROWER_ID,
+    issuedCredential: null,
   };
 }
 
@@ -63,6 +66,7 @@ interface AppContextValue extends PersistedState {
   applyTransaction: (tx: Transaction) => void;
   addTxProof: (proof: TransactionProof) => void;
   addMasterProof: (master: MasterProof) => void;
+  setIssuedCredential: (cred: IssuedCredential | null) => void;
   reset: () => void;
 }
 
@@ -141,6 +145,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setState((s) => ({ ...s, masterProofs: [master, ...s.masterProofs] }));
   }, []);
 
+  const setIssuedCredential = useCallback((cred: IssuedCredential | null) => {
+    setState((s) => ({ ...s, issuedCredential: cred }));
+  }, []);
+
   const reset = useCallback(() => {
     setState(freshState());
   }, []);
@@ -168,6 +176,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       applyTransaction,
       addTxProof,
       addMasterProof,
+      setIssuedCredential,
       reset,
     };
   }, [
@@ -178,6 +187,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     applyTransaction,
     addTxProof,
     addMasterProof,
+    setIssuedCredential,
     reset,
   ]);
 

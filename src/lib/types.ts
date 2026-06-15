@@ -52,6 +52,17 @@ export interface IdentityAttribute {
   dataType?: string;
 }
 
+// A verifiable credential issued to (and claimable by) the holder's wallet.
+export interface IssuedCredential {
+  offerId: string;
+  credentialId: string;
+  credentialName: string;
+  claimUri: string; // openid-credential-offer:// — encode as QR
+  deepLink?: string;
+  claims: { claimName: string; claimValue: string }[];
+  issuedAt: string;
+}
+
 export interface IdentityCertificate {
   id: string;
   subjectAccountId: string;

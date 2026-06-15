@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import QRCode from "qrcode";
+import { WalletQR } from "./wallet-qr";
 import { identityApi, paymentsApi, proofApi } from "@/lib/api";
 import type { IdentityStatus, PresentationRequest } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
@@ -49,30 +49,6 @@ const SEAL_STAGES = [
   "Creating transaction proof",
   "Sealing proof of everything",
 ];
-
-// A QR code for the wallet to scan, rendered from the TNG authRequestURI.
-function WalletQR({ value }: { value: string }) {
-  const [src, setSrc] = useState("");
-  useEffect(() => {
-    let active = true;
-    QRCode.toDataURL(value, {
-      width: 220,
-      margin: 1,
-      color: { dark: "#0d1626", light: "#ffffff" },
-    })
-      .then((url) => active && setSrc(url))
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
-  }, [value]);
-  return src ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt="Scan with your wallet" width={220} height={220} className="rounded-xl" />
-  ) : (
-    <div className="size-[220px] animate-pulse rounded-xl bg-surface-2" />
-  );
-}
 
 export function RepaymentWizard({
   onClose,

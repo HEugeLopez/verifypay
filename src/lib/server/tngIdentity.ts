@@ -9,11 +9,11 @@ import { config } from "./config";
 // a QR to the holder's wallet -> poll status until "valid" -> read credentials.
 // The x-api-key never leaves the server.
 //
-// NOTE: the authenticated endpoints live under `/api/v1/private/...`. If your
-// environment exposes them without the `/private` segment, change VP_PATH below.
+// NOTE: verified against a live TNG env (v2.2.0): the verifiable-presentation
+// endpoints are under `/api/v1/verifiable-presentations` (no `/private`).
 // ----------------------------------------------------------------------------
 
-const VP_PATH = "/api/v1/private/verifiable-presentations";
+const VP_PATH = "/api/v1/verifiable-presentations";
 
 export interface TngCreateResponse {
   correlationId: string;
@@ -63,8 +63,13 @@ async function tng<T>(path: string, init: RequestInit): Promise<T> {
 }
 
 export const tngIdentity = {
-  // Create a verification request for the configured presentation definition.
-  createPresentationRequest(definitionId = config.tngIdentity.definitionId) {
+  // List the verifier's presentation templates (each includes a definitionId).
+  listTemplates<T = unknown>(): Promise<T> {
+    return tng<T>("/api/v1/private/webapp/templates", { method: "GET" });
+  },
+
+  // Create a verification request for a presentation definition.
+  createPresentationRequest(definitionId: string) {
     return tng<TngCreateResponse>(`${VP_PATH}/definition/${encodeURIComponent(definitionId)}`, {
       method: "POST",
     });

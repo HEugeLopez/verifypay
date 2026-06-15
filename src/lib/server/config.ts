@@ -43,9 +43,33 @@ export const config = {
     get definitionId() {
       return requireEnv("TNG_VERIFIER_DEFINITION_ID");
     },
+    get definitionIdOptional() {
+      return process.env.TNG_VERIFIER_DEFINITION_ID || null;
+    },
     get verifierBaseUrl() {
       return `https://${this.host}/products/web/${this.envHash}/verifier`;
     },
+    get issuerBaseUrl() {
+      return `https://${this.host}/products/web/${this.envHash}/issuer`;
+    },
+    get portalBaseUrl() {
+      return `https://${this.host}/products/web/${this.envHash}/portalbackend/api`;
+    },
+    get rootBaseUrl() {
+      return `https://${this.host}/products/web/${this.envHash}`;
+    },
+    // Issuer tenant config (non-secret; discovered from the portal). Override via env.
+    get issuerAgentId() {
+      return process.env.TNG_ISSUER_AGENT_ID || "teranode";
+    },
+    get issuerOrgProfileId() {
+      return process.env.TNG_ISSUER_ORG_PROFILE_ID || "405f0596-cb49-41f9-9e19-939119e04a2e";
+    },
+    // Enough to call TNG (list templates, create a request with an explicit id).
+    get hasCredentials() {
+      return Boolean(process.env.TNG_IDENTITY_API_KEY && process.env.TNG_IDENTITY_ENV_HASH);
+    },
+    // Fully wired for the zero-config wizard flow (definition id also set).
     get configured() {
       return Boolean(
         process.env.TNG_IDENTITY_API_KEY &&

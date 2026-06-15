@@ -151,8 +151,12 @@ function pickSubject(attrs: { name: string; value: string }[]): string {
 
 export const identityApi = {
   // Step 1 — create a TNG presentation request (returns the QR/deeplink URI).
-  async startVerification(): Promise<PresentationRequest> {
-    const res = await fetch("/api/identity/request", { method: "POST" });
+  async startVerification(definitionId?: string): Promise<PresentationRequest> {
+    const res = await fetch("/api/identity/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(definitionId ? { definitionId } : {}),
+    });
     const data = await res.json();
     if (!data?.ok) {
       throw new Error(data?.error ?? "Failed to start verification");

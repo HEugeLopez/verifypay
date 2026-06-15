@@ -4,6 +4,7 @@ import { useApp } from "@/lib/store";
 import { formatDate, formatMoney, relativeTime } from "@/lib/format";
 import type { Account, Transaction } from "@/lib/types";
 import { Avatar, Badge, Button, Card, CardHeader, cn } from "./ui";
+import { CredentialCard } from "./credential-card";
 import {
   ArrowRight,
   Building,
@@ -79,6 +80,7 @@ export function Dashboard({
         </div>
         <div className="min-w-0 space-y-4">
           <ProfileCard account={activeAccount} />
+          {isBorrower && <CredentialCard />}
           <CounterpartyCard account={isBorrower ? lender : borrower} loanRef={loan.reference} />
         </div>
       </div>
