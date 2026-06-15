@@ -26,13 +26,69 @@ signatures. Verification re-derives everything from stored data, so nothing is
 faked. (The signing keys are inlined client-side **only** for the offline demo —
 in production they belong behind your APIs.)
 
-## Wiring in real APIs
+## Live integrations
 
-All network calls are mocked behind a single seam: **`src/lib/api.ts`**
-(`identityApi.verify`, `paymentsApi.execute`,
-`proofApi.createTransactionProof / createMasterProof / verifyMasterProof`).
-Replace each method body with a real `fetch(...)`; the types in
-`src/lib/types.ts` and the rest of the app stay the same.
+Two services are wired for real, behind server-side route handlers so the API
+keys never reach the browser:
+
+| Service | What it does | Route handlers | Server client |
+|---|---|---|---|
+| **TNG Identity** (OpenID4VP) | Issues/verifies the identity via a wallet presentation | `src/app/api/identity/{request,status}` | `src/lib/server/tngIdentity.ts` |
+| **Proof Fabric Protocol** | Proof of transaction + verification | `src/app/api/proof/{generate,verify}` | `src/lib/server/proofFabric.ts` |
+
+The browser-side seam (`src/lib/api.ts`) calls these `/api/*` routes; keys are
+read only in `src/lib/server/config.ts` (guarded by the `server-only` package).
+
+- **Identity** has *no* fallback — if it isn't configured the wizard says so.
+- **Proof** falls back to a local HMAC proof (clearly labelled) when its key is
+  absent, so the rest of the demo keeps working.
+
+### Live API setup
+
+1. Copy the env template and fill in your values (this file is git-ignored):
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+   ```bash
+   # TNG Identity (verifier). Base URL = https://<host>/products/web/<envHash>/verifier
+   TNG_IDENTITY_HOST=identity.products.teranode.group   # default; override if needed
+   TNG_IDENTITY_ENV_HASH=        # your environment hash, e.g. 426f1ce15bf3df70
+   TNG_IDENTITY_API_KEY=         # x-api-key value
+   TNG_VERIFIER_DEFINITION_ID=   # presentation definition id, e.g. emailCredential
+
+   # Proof Fabric Protocol
+   PROOF_API_BASE_URL=https://fea-crypto.emergent.host   # default
+   PROOF_API_KEY=                # X-API-Key value (pfp_sandbox_...)
+   ```
+
+2. Restart the dev server (env is read at startup).
+
+3. Check what's wired without opening the UI:
+
+   ```bash
+   curl http://localhost:3003/api/health
+   ```
+
+   ```jsonc
+   {
+     "ok": true,
+     "integrations": {
+       "tngIdentity": { "configured": true,  "verifierBaseUrl": "…", "missing": [] },
+       "proof":       { "configured": true,  "baseUrl": "…",         "missing": [] }
+     }
+   }
+   ```
+
+   `missing` lists any env vars still unset. No secret values are ever returned.
+
+> **Notes / assumptions to confirm against your TNG environment:**
+> - The verifier endpoints are assumed under `/api/v1/private/verifiable-presentations`
+>   (the `VP_PATH` constant in `tngIdentity.ts`). If you get a 404, drop `/private`.
+> - The env hash and `definitionId` come from your TNG portal / Getting Started.
+> - Completing a verification needs a **TNG wallet holding a matching credential**
+>   to scan the QR shown in the wizard.
 
 ## Run
 
