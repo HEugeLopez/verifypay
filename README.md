@@ -99,3 +99,23 @@ npm run dev   # http://localhost:3000  (preview config uses 3003)
 Stack: Next.js 16 (App Router, Turbopack) · React 19 · Tailwind v4 · TypeScript.
 State lives in React context with localStorage persistence (`src/lib/store.tsx`);
 use **Reset demo** in the header to clear it.
+
+## Deploy (Vercel)
+
+This app needs a Node server (the `/api/*` route handlers run server-side), so it
+must be deployed somewhere that runs Next.js — **not** GitHub Pages. Vercel works
+out of the box:
+
+1. Import the repo at [vercel.com/new](https://vercel.com/new) (framework
+   auto-detects as Next.js — no build config needed).
+2. Add **Environment Variables** (same as `.env.local`):
+   - `TNG_IDENTITY_ENV_HASH`, `TNG_IDENTITY_API_KEY`, `TNG_VERIFIER_DEFINITION_ID`
+   - `PROOF_API_KEY`
+   - (optional, have defaults: `TNG_IDENTITY_HOST`, `PROOF_API_BASE_URL`,
+     `TNG_ISSUER_AGENT_ID`, `TNG_ISSUER_ORG_PROFILE_ID`)
+3. Deploy. Verify with `https://<your-app>.vercel.app/api/health`.
+
+> **Security note:** the `/api/*` routes call TNG/PFP with your keys. On a public
+> deployment they act as an open proxy — anyone with the URL can issue/verify
+> using those keys. Keep **sandbox** keys here, and add auth/rate-limiting before
+> using production keys.
