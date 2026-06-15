@@ -37,6 +37,13 @@ function prettyLabel(name: string): string {
 // --- Identity certificate ---------------------------------------------------
 
 export function CertificateCard({ cert }: { cert: IdentityCertificate }) {
+  // Surface the holder DID and credential type specially; show the rest as claims.
+  const didAttr = cert.attributes.find(
+    (a) => a.name.toLowerCase() === "id" || a.value.startsWith("did:"),
+  );
+  const typeAttr = cert.attributes.find((a) => a.name.toLowerCase() === "type");
+  const claimAttrs = cert.attributes.filter((a) => a !== didAttr && a !== typeAttr);
+
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-verify-soft to-surface px-5 py-4">
@@ -56,14 +63,22 @@ export function CertificateCard({ cert }: { cert: IdentityCertificate }) {
 
       <div className="grid gap-x-6 gap-y-1 px-5 py-4 sm:grid-cols-2">
         <Field label="Subject" value={cert.subject} />
+        {typeAttr && <Field label="Credential" value={typeAttr.value} />}
         {cert.assuranceLevel && (
           <Field label="Assurance level" value={<Badge tone="brand">{cert.assuranceLevel}</Badge>} />
         )}
-        {cert.attributes.map((a) => (
+        {claimAttrs.map((a) => (
           <Field key={a.name} label={prettyLabel(a.name)} value={a.value} />
         ))}
         <Field label="Verified" value={formatDateTime(cert.verifiedAt)} />
       </div>
+
+      {didAttr && (
+        <div className="flex items-center justify-between gap-3 border-t border-line px-5 py-3">
+          <span className="text-xs font-medium text-ink-muted">Holder DID</span>
+          <HashChip value={didAttr.value} edge={12} tone="verify" />
+        </div>
+      )}
 
       <div className="border-t border-line px-5 py-4">
         <p className="mb-2 text-xs font-medium text-ink-muted">Verification methods</p>
