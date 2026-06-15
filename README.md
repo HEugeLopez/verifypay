@@ -111,11 +111,19 @@ out of the box:
 2. Add **Environment Variables** (same as `.env.local`):
    - `TNG_IDENTITY_ENV_HASH`, `TNG_IDENTITY_API_KEY`, `TNG_VERIFIER_DEFINITION_ID`
    - `PROOF_API_KEY`
+   - `APP_PASSWORD` — **set this** to gate the public deployment (see below)
    - (optional, have defaults: `TNG_IDENTITY_HOST`, `PROOF_API_BASE_URL`,
      `TNG_ISSUER_AGENT_ID`, `TNG_ISSUER_ORG_PROFILE_ID`)
 3. Deploy. Verify with `https://<your-app>.vercel.app/api/health`.
 
-> **Security note:** the `/api/*` routes call TNG/PFP with your keys. On a public
-> deployment they act as an open proxy — anyone with the URL can issue/verify
-> using those keys. Keep **sandbox** keys here, and add auth/rate-limiting before
-> using production keys.
+### Access gate
+
+A password gate (`src/proxy.ts`) protects every page and `/api/*` route. It is
+**active only when `APP_PASSWORD` is set** — so local dev stays open, and the
+public deployment requires the password. Visitors get a `/login` screen; the
+cookie stores a SHA-256 token (never the password). To share the demo, give
+people the URL + the password.
+
+> **Security note:** even with the gate, the `/api/*` routes call TNG/PFP with
+> your keys. Keep **sandbox** keys here. The gate is a lightweight shared-password
+> barrier, not full auth — add rate-limiting before using production keys.
