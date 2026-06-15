@@ -150,6 +150,15 @@ export function TransactionProofCard({ proof }: { proof: TransactionProof }) {
         icon={<LinkIcon />}
         title="Transaction proof"
         subtitle={`Attested by ${proof.attestor}`}
+        action={
+          proof.source === "pfp" ? (
+            <Badge tone="verify" icon={<span className="size-1.5 rounded-full bg-verify vp-pulse-ring" />}>
+              Live · Proof Fabric
+            </Badge>
+          ) : (
+            <Badge tone="warn">Local fallback</Badge>
+          )
+        }
       />
       <div className="px-5 py-4">
         <div className="flex flex-wrap items-center justify-center gap-3 rounded-xl bg-surface-2 px-4 py-4">
@@ -164,8 +173,21 @@ export function TransactionProofCard({ proof }: { proof: TransactionProof }) {
           certificate.
         </p>
       </div>
+      {proof.source === "pfp" && (
+        <div className="border-t border-line px-5 py-3">
+          <p className="mb-2 text-xs font-medium text-ink-muted">Proof Fabric artifact</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {proof.feaId && <HashChip label="fea id" value={proof.feaId} tone="verify" />}
+            {proof.feaSignature && <HashChip label="signature" value={proof.feaSignature} />}
+            {proof.feaSignatureVersion && (
+              <Badge tone="neutral">sig {proof.feaSignatureVersion}</Badge>
+            )}
+            {proof.feaPublicKeyId && <Badge tone="neutral">key {proof.feaPublicKeyId}</Badge>}
+          </div>
+        </div>
+      )}
       <div className="border-t border-line bg-surface-2 px-5 py-3">
-        <HashChip label="signature" value={proof.signature} />
+        <HashChip label="local signature" value={proof.signature} />
       </div>
     </Card>
   );

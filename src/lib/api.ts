@@ -39,6 +39,14 @@ function genId(prefix: string): string {
   return `${prefix}_${rand}`;
 }
 
+// Corrupt one hex char so a signature deterministically fails verification.
+function flipHex(hex: string): string {
+  if (!hex) return hex;
+  const c = hex[0];
+  const next = c === "0" ? "1" : "0";
+  return next + hex.slice(1);
+}
+
 function addYears(iso: string, years: number): string {
   const d = new Date(iso);
   d.setFullYear(d.getFullYear() + years);
@@ -182,11 +190,13 @@ export const paymentsApi = {
 
 export const proofApi = {
   // Binds a settled transaction to the identity certificate that authorized it.
+  // Primary path: the real Proof Fabric Protocol service. Falls back to a local
+  // HMAC proof when the service isn't configured/reachable, so the demo never
+  // hard-fails.
   async createTransactionProof(
     tx: Transaction,
     cert: IdentityCertificate,
   ): Promise<TransactionProof> {
-    await delay(800);
     const txHash = tx.txHash ?? (await hashObject(txSignableBody(tx)));
     const certHash = await certContentHash(cert);
     const proofHash = await sha256Hex(txHash + certHash);
@@ -201,11 +211,43 @@ export const proofApi = {
       proofHash,
       signature: "",
       createdAt: new Date().toISOString(),
+      source: "local",
     };
     proof.signature = await hmacHex(
       MOCK_KEYS.attestor,
       canonical(txProofSignableBody(proof)),
     );
+
+    // Try the real Proof Fabric Protocol service via our server route.
+    try {
+      const res = await fetch("/api/proof/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idempotencyKey: proof.id,
+          transactionId: tx.id,
+          amount: tx.amount,
+          currency: tx.currency,
+          payerId: tx.fromAccountId,
+          payeeId: tx.toAccountId,
+          timestamp: tx.createdAt,
+        }),
+      });
+      const data = await res.json();
+      if (data?.ok && data.artifact) {
+        proof.source = "pfp";
+        proof.attestor = "Proof Fabric Protocol";
+        proof.feaId = data.artifact.fea_id;
+        proof.feaPayload = data.artifact.fea_payload;
+        proof.feaSignature = data.artifact.signature;
+        proof.feaSignatureVersion = data.artifact.signature_version;
+        proof.feaPublicKeyId = data.artifact.public_key_id;
+      } else {
+        await delay(500); // keep the staged UI legible when falling back
+      }
+    } catch {
+      await delay(500);
+    }
     return proof;
   },
 
@@ -324,6 +366,27 @@ export const proofApi = {
       detail: "Verify the signature binding the whole proof bundle.",
       ok: masterSigOk,
     });
+
+    // 8. Live re-verification by the Proof Fabric Protocol service (real artifacts only)
+    if (txProof.source === "pfp" && txProof.feaPayload && txProof.feaSignature) {
+      const altered = recomputedTx !== txProof.txHash; // tamper toggle changed the tx
+      let liveOk = false;
+      let detail = "Re-verify the artifact payload + signature with the Proof Fabric Protocol service.";
+      try {
+        const signature = altered ? flipHex(txProof.feaSignature) : txProof.feaSignature;
+        const res = await fetch("/api/proof/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ feaPayload: txProof.feaPayload, signature }),
+        });
+        const data = await res.json();
+        liveOk = Boolean(data?.ok && data.result?.valid);
+        if (data?.ok && data.result?.reason && !liveOk) detail = `Service: ${data.result.reason}`;
+      } catch {
+        detail = "Proof Fabric service unreachable.";
+      }
+      checks.push({ label: "Proof Fabric signature (live)", detail, ok: liveOk });
+    }
 
     return {
       ok: checks.every((c) => c.ok),

@@ -102,6 +102,15 @@ export interface TransactionProof {
   proofHash: string; // sha-256(txHash + certHash)
   signature: string; // HMAC over proof body (attestor key)
   createdAt: string;
+
+  // Provenance: "pfp" = real Proof Fabric Protocol artifact, "local" = offline fallback
+  source: "pfp" | "local";
+  // Proof Fabric Protocol artifact (present when source === "pfp")
+  feaId?: string;
+  feaPayload?: unknown;
+  feaSignature?: string;
+  feaSignatureVersion?: string;
+  feaPublicKeyId?: string;
 }
 
 export interface MerkleLeaf {
