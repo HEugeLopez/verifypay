@@ -59,7 +59,7 @@ export function CardHeader({
   );
 }
 
-type Variant = "primary" | "verify" | "ghost" | "outline" | "danger";
+type Variant = "primary" | "verify" | "ghost" | "outline" | "danger" | "warn";
 
 const variantClass: Record<Variant, string> = {
   primary:
@@ -69,6 +69,7 @@ const variantClass: Record<Variant, string> = {
   outline: "border border-line-strong bg-surface text-ink hover:bg-surface-2",
   ghost: "text-ink-muted hover:bg-surface-2 hover:text-ink",
   danger: "bg-danger text-white hover:opacity-90",
+  warn: "bg-warn text-white hover:opacity-90",
 };
 
 export function Button({

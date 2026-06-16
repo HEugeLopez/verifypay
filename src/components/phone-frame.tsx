@@ -24,7 +24,7 @@ export function PhoneFrame({
         <div className="rounded-[3.4rem] bg-gradient-to-b from-zinc-600 via-zinc-800 to-zinc-900 p-[3px] shadow-[0_50px_90px_-25px_rgba(13,22,38,0.5)]">
           <div className="rounded-[3.3rem] bg-black p-[9px]">
             <div
-              className="relative aspect-[9/19.5] overflow-hidden rounded-[2.7rem]"
+              className="relative aspect-[9/18] overflow-hidden rounded-[2.7rem]"
               style={{
                 background:
                   "radial-gradient(120% 55% at 100% 0%, #e7edfb 0%, transparent 55%), radial-gradient(100% 45% at 0% 0%, #eafaf3 0%, transparent 45%), var(--color-canvas)",
