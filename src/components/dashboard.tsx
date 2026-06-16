@@ -159,16 +159,14 @@ function BorrowerLoanCard({ onStartRepayment }: { onStartRepayment: () => void }
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-warn-soft bg-warn-soft/60 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-warn">
-            <Clock className="size-4" />
-            Next payment due {formatDate(loan.nextDueDate)}
-          </div>
-          <Button size="sm" onClick={onStartRepayment}>
-            Pay {formatMoney(loan.installment)}
-            <ArrowRight className="size-3.5" />
-          </Button>
+        <div className="mt-4 flex items-center gap-2 rounded-xl border border-warn-soft bg-warn-soft/60 px-4 py-3 text-sm text-warn">
+          <Clock className="size-4" />
+          Next payment due {formatDate(loan.nextDueDate)}
         </div>
+        <Button variant="outline" className="mt-3 w-full" onClick={onStartRepayment}>
+          Pay {formatMoney(loan.installment)}
+          <ArrowRight className="size-4" />
+        </Button>
       </div>
     </Card>
   );
