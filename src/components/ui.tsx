@@ -42,14 +42,14 @@ export function CardHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
-      <div className="flex items-center gap-3">
+    <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+      <div className="flex min-w-0 items-center gap-3">
         {icon && (
-          <span className="flex size-9 items-center justify-center rounded-xl bg-surface-2 text-ink-muted">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-2 text-ink-muted">
             {icon}
           </span>
         )}
-        <div>
+        <div className="min-w-0">
           <h3 className="text-sm font-semibold tracking-tight text-ink">{title}</h3>
           {subtitle && <p className="text-xs text-ink-subtle">{subtitle}</p>}
         </div>
@@ -134,7 +134,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium",
         toneClass[tone],
         className,
       )}
