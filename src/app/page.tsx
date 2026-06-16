@@ -4,6 +4,7 @@ import { useState } from "react";
 import { TopBar, type View } from "@/components/top-bar";
 import { Dashboard } from "@/components/dashboard";
 import { ActivityView } from "@/components/activity-view";
+import { SettingsView } from "@/components/settings-view";
 import { ProofsView } from "@/components/proofs-view";
 import { RepaymentWizard } from "@/components/repayment-wizard";
 import { ProfileSheet } from "@/components/profile-sheet";
@@ -34,6 +35,8 @@ export default function Page() {
       />
     ) : view === "activity" ? (
       <ActivityView onViewProof={viewProof} />
+    ) : view === "settings" ? (
+      <SettingsView />
     ) : (
       <ProofsView selectedTxId={selectedTxId} onSelect={setSelectedTxId} />
     );
@@ -64,6 +67,7 @@ export default function Page() {
                 onHome={() => setView("dashboard")}
                 onActivity={() => setView("activity")}
                 onProfile={() => setProfileOpen(true)}
+                onSettings={() => setView("settings")}
                 onNew={() => setWizardOpen(true)}
               />
             }

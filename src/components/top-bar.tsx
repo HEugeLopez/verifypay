@@ -4,7 +4,7 @@ import { useApp } from "@/lib/store";
 import { Avatar, cn } from "./ui";
 import { Scale, ShieldCheck, Exchange, Wallet as WalletIcon } from "./icons";
 
-export type View = "dashboard" | "activity" | "proofs";
+export type View = "dashboard" | "activity" | "proofs" | "settings";
 
 export function TopBar({
   view,
