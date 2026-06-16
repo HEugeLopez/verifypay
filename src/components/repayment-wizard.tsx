@@ -53,9 +53,11 @@ const SEAL_STAGES = [
 export function RepaymentWizard({
   onClose,
   onViewProof,
+  contained = false,
 }: {
   onClose: () => void;
   onViewProof: (txId: string) => void;
+  contained?: boolean;
 }) {
   const { borrower, lender, loan, addCertificate, applyTransaction, addTxProof, addMasterProof } =
     useApp();
@@ -154,8 +156,13 @@ export function RepaymentWizard({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-ink/40 p-4 backdrop-blur-sm sm:p-8">
-      <div className="w-full max-w-2xl vp-pop">
+    <div
+      className={cn(
+        "z-40 flex items-start justify-center overflow-y-auto bg-ink/40 backdrop-blur-sm",
+        contained ? "absolute inset-0 p-3" : "fixed inset-0 p-4 sm:p-8",
+      )}
+    >
+      <div className={cn("w-full vp-pop", contained ? "max-w-full" : "max-w-2xl")}>
         {/* header */}
         <div className="mb-3 flex items-center justify-between rounded-2xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-card)]">
           <div className="flex items-center gap-2 text-sm font-semibold text-ink">
