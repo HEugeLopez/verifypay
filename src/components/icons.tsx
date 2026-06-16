@@ -151,6 +151,22 @@ export const Link = (p: IconProps) => (
   </svg>
 );
 
+export const Mail = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="m3 7 9 6 9-6" />
+  </svg>
+);
+
+export const IdCard = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <circle cx="9" cy="11" r="2" />
+    <path d="M6.5 16c0-1.4 1.1-2.2 2.5-2.2s2.5.8 2.5 2.2" />
+    <path d="M14 10.5h4M14 13.5h4" />
+  </svg>
+);
+
 export const Receipt = (p: IconProps) => (
   <svg {...base(p)}>
     <path d="M5 3v18l2-1 2 1 2-1 2 1 2-1 2 1V3l-2 1-2-1-2 1-2-1-2 1Z" />

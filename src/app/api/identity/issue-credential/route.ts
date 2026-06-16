@@ -1,31 +1,31 @@
 import { tngIssuer } from "@/lib/server/tngIssuer";
 import { config } from "@/lib/server/config";
+import { getDemoCredential, DEMO_CREDENTIALS } from "@/lib/demo-credentials";
 
 // POST /api/identity/issue-credential
-// Issues a demo "bank account" verifiable credential and returns the claim URI
-// (QR) plus the claims, so the profile can display + persist it.
-const BANK_CLAIMS = [
-  { claimName: "fullName", claimValue: "Amara Okafor" },
-  { claimName: "accountNumber", claimValue: "1882773104" },
-  { claimName: "accountType", claimValue: "Checking Account" },
-  { claimName: "bankName", claimValue: "Northwind Trust Bank" },
-  { claimName: "bankBranch", claimValue: "Austin, TX" },
-  { claimName: "routingNumber", claimValue: "114000093" },
-  { claimName: "address", claimValue: "1100 Congress Ave, Austin, TX, USA" },
-  { claimName: "identificationNumber", claimValue: "ID-4471" },
-  { claimName: "accountBalance", claimValue: "4820.55" },
-];
-
-export async function POST() {
+// Body: { credentialId }  (defaults to the bank account credential)
+// Issues the chosen demo verifiable credential and returns the claim URI (QR).
+export async function POST(request: Request) {
   if (!config.tngIdentity.hasCredentials) {
+    return Response.json({ ok: false, error: "TNG Identity not configured" }, { status: 200 });
+  }
+  let credentialId = "bankAccountCredential";
+  try {
+    const body = await request.json();
+    if (body?.credentialId) credentialId = body.credentialId;
+  } catch {
+    /* default */
+  }
+  const def = getDemoCredential(credentialId);
+  if (!def) {
     return Response.json(
-      { ok: false, error: "TNG Identity not configured" },
-      { status: 200 },
+      { ok: false, error: `Unknown credential. Try one of: ${DEMO_CREDENTIALS.map((c) => c.credentialId).join(", ")}` },
+      { status: 400 },
     );
   }
   try {
-    const offer = await tngIssuer.issueCredential("bankAccountCredential", BANK_CLAIMS);
-    return Response.json({ ok: true, offer, claims: BANK_CLAIMS });
+    const offer = await tngIssuer.issueCredential(def.credentialId, def.claims);
+    return Response.json({ ok: true, offer, claims: def.claims, credentialName: def.name });
   } catch (e) {
     return Response.json(
       { ok: false, error: e instanceof Error ? e.message : String(e) },

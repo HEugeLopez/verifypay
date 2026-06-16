@@ -94,7 +94,8 @@ export function Dashboard({
           />
         </div>
         <div className="min-w-0 space-y-4">
-          <ProfileCard account={activeAccount} />
+          {/* Borrower's profile lives in the tap-to-open profile sheet, not here */}
+          {!isBorrower && <ProfileCard account={activeAccount} />}
           <CounterpartyCard account={isBorrower ? lender : borrower} loanRef={loan.reference} />
         </div>
       </div>
