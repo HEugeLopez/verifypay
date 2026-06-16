@@ -5,6 +5,7 @@ import { TopBar, type View } from "@/components/top-bar";
 import { Dashboard } from "@/components/dashboard";
 import { ProofsView } from "@/components/proofs-view";
 import { RepaymentWizard } from "@/components/repayment-wizard";
+import { ProfileSheet } from "@/components/profile-sheet";
 import { PhoneFrame } from "@/components/phone-frame";
 import { useApp } from "@/lib/store";
 
@@ -14,6 +15,7 @@ export default function Page() {
 
   const [view, setView] = useState<View>("dashboard");
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [selectedTxId, setSelectedTxId] = useState<string | null>(null);
 
   const viewProof = (txId: string) => {
@@ -23,12 +25,16 @@ export default function Page() {
 
   const content =
     view === "dashboard" ? (
-      <Dashboard onStartRepayment={() => setWizardOpen(true)} onViewProof={viewProof} />
+      <Dashboard
+        onStartRepayment={() => setWizardOpen(true)}
+        onViewProof={viewProof}
+        onOpenProfile={() => setProfileOpen(true)}
+      />
     ) : (
       <ProofsView selectedTxId={selectedTxId} onSelect={setSelectedTxId} />
     );
 
-  const wizard = wizardOpen ? (
+  const overlay = wizardOpen ? (
     <RepaymentWizard
       contained={isBorrower}
       onClose={() => setWizardOpen(false)}
@@ -37,6 +43,8 @@ export default function Page() {
         viewProof(txId);
       }}
     />
+  ) : profileOpen ? (
+    <ProfileSheet onClose={() => setProfileOpen(false)} />
   ) : null;
 
   return (
@@ -44,11 +52,11 @@ export default function Page() {
       <TopBar view={view} onView={setView} />
       <main className="flex-1">
         {isBorrower ? (
-          <PhoneFrame overlay={wizard}>{content}</PhoneFrame>
+          <PhoneFrame overlay={overlay}>{content}</PhoneFrame>
         ) : (
           <>
             {content}
-            {wizard}
+            {overlay}
           </>
         )}
       </main>

@@ -4,11 +4,12 @@ import { useApp } from "@/lib/store";
 import { formatDate, formatMoney, relativeTime } from "@/lib/format";
 import type { Account, Transaction } from "@/lib/types";
 import { Avatar, Badge, Button, Card, CardHeader, cn } from "./ui";
-import { CredentialCard } from "./credential-card";
+import { AmaraAvatar } from "./amara-avatar";
 import {
   ArrowRight,
   Building,
   Check,
+  ChevronDown,
   Clock,
   Lock,
   Plus,
@@ -20,9 +21,11 @@ import {
 export function Dashboard({
   onStartRepayment,
   onViewProof,
+  onOpenProfile,
 }: {
   onStartRepayment: () => void;
   onViewProof: (txId: string) => void;
+  onOpenProfile: () => void;
 }) {
   const { activeAccount, borrower, lender, loan, transactions } = useApp();
   const isBorrower = activeAccount.role === "borrower";
@@ -35,14 +38,26 @@ export function Dashboard({
     <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
       {/* greeting */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-sm text-ink-muted">
-            {isBorrower ? "Borrower workspace" : "Lender workspace"}
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
-            {isBorrower ? "Hello, Amara" : "Northwind Capital"}
-          </h1>
-        </div>
+        {isBorrower ? (
+          <button
+            onClick={onOpenProfile}
+            className="group flex items-center gap-3 rounded-2xl py-1 pr-2 text-left transition-colors hover:bg-surface-2/70 active:scale-[0.99]"
+          >
+            <AmaraAvatar size={46} className="rounded-full shadow-[var(--shadow-card)]" />
+            <div>
+              <p className="text-sm text-ink-muted">Borrower workspace</p>
+              <h1 className="flex items-center gap-1 text-2xl font-semibold tracking-tight text-ink">
+                Hello, Amara
+                <ChevronDown className="size-4 -rotate-90 text-ink-subtle transition-transform group-hover:translate-x-0.5" />
+              </h1>
+            </div>
+          </button>
+        ) : (
+          <div>
+            <p className="text-sm text-ink-muted">Lender workspace</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-ink">Northwind Capital</h1>
+          </div>
+        )}
         {isBorrower ? (
           <Button onClick={onStartRepayment}>
             <Plus className="size-4" />
@@ -80,7 +95,6 @@ export function Dashboard({
         </div>
         <div className="min-w-0 space-y-4">
           <ProfileCard account={activeAccount} />
-          {isBorrower && <CredentialCard />}
           <CounterpartyCard account={isBorrower ? lender : borrower} loanRef={loan.reference} />
         </div>
       </div>

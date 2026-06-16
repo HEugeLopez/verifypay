@@ -31,7 +31,7 @@ export function PhoneFrame({
               }}
             >
               {/* status bar */}
-              <div className="absolute inset-x-0 top-0 z-40 flex h-[44px] items-center justify-between bg-[var(--color-canvas)]/85 px-7 text-[13px] font-semibold text-ink backdrop-blur-sm">
+              <div className="absolute inset-x-0 top-0 z-50 flex h-[44px] items-center justify-between bg-[var(--color-canvas)]/85 px-7 text-[13px] font-semibold text-ink backdrop-blur-sm">
                 <span>9:41</span>
                 <span className="flex items-center gap-1.5 text-ink">
                   <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor" aria-hidden>
@@ -55,7 +55,7 @@ export function PhoneFrame({
               </div>
 
               {/* dynamic island */}
-              <div className="absolute left-1/2 top-[11px] z-40 h-[26px] w-[92px] -translate-x-1/2 rounded-full bg-black" />
+              <div className="absolute left-1/2 top-[11px] z-50 h-[26px] w-[92px] -translate-x-1/2 rounded-full bg-black" />
 
               {/* app content */}
               <div className="h-full overflow-y-auto overscroll-contain pt-[44px]">{children}</div>
