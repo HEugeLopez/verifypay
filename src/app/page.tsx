@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { TopBar, type View } from "@/components/top-bar";
 import { Dashboard } from "@/components/dashboard";
+import { ActivityView } from "@/components/activity-view";
 import { ProofsView } from "@/components/proofs-view";
 import { RepaymentWizard } from "@/components/repayment-wizard";
 import { ProfileSheet } from "@/components/profile-sheet";
 import { PhoneFrame } from "@/components/phone-frame";
+import { PhoneNav } from "@/components/phone-nav";
 import { useApp } from "@/lib/store";
 
 export default function Page() {
@@ -30,6 +32,8 @@ export default function Page() {
         onViewProof={viewProof}
         onOpenProfile={() => setProfileOpen(true)}
       />
+    ) : view === "activity" ? (
+      <ActivityView onViewProof={viewProof} />
     ) : (
       <ProofsView selectedTxId={selectedTxId} onSelect={setSelectedTxId} />
     );
@@ -49,10 +53,23 @@ export default function Page() {
 
   return (
     <div className="flex min-h-full flex-col">
-      <TopBar view={view} onView={setView} />
+      <TopBar view={view} onView={setView} showNav={!isBorrower} />
       <main className="flex-1">
         {isBorrower ? (
-          <PhoneFrame overlay={overlay}>{content}</PhoneFrame>
+          <PhoneFrame
+            overlay={overlay}
+            bottomBar={
+              <PhoneNav
+                active={view}
+                onHome={() => setView("dashboard")}
+                onActivity={() => setView("activity")}
+                onProfile={() => setProfileOpen(true)}
+                onNew={() => setWizardOpen(true)}
+              />
+            }
+          >
+            {content}
+          </PhoneFrame>
         ) : (
           <>
             {content}

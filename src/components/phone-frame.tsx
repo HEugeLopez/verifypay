@@ -7,9 +7,11 @@ import type { ReactNode } from "react";
 export function PhoneFrame({
   children,
   overlay,
+  bottomBar,
 }: {
   children: ReactNode;
   overlay?: ReactNode;
+  bottomBar?: ReactNode;
 }) {
   return (
     <div className="flex justify-center px-4 py-6 sm:py-8">
@@ -58,8 +60,13 @@ export function PhoneFrame({
               <div className="absolute left-1/2 top-[11px] z-50 h-[26px] w-[92px] -translate-x-1/2 rounded-full bg-black" />
 
               {/* app content */}
-              <div className="h-full overflow-y-auto overscroll-contain pt-[44px]">{children}</div>
+              <div
+                className={`h-full overflow-y-auto overscroll-contain pt-[44px] ${bottomBar ? "pb-[88px]" : ""}`}
+              >
+                {children}
+              </div>
 
+              {bottomBar}
               {overlay}
             </div>
           </div>

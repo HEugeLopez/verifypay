@@ -11,8 +11,6 @@ import {
   Check,
   ChevronDown,
   Clock,
-  Lock,
-  Plus,
   ShieldCheck,
   User,
   Wallet as WalletIcon,
@@ -58,12 +56,7 @@ export function Dashboard({
             <h1 className="text-2xl font-semibold tracking-tight text-ink">Northwind Capital</h1>
           </div>
         )}
-        {isBorrower ? (
-          <Button onClick={onStartRepayment}>
-            <Plus className="size-4" />
-            Make a repayment
-          </Button>
-        ) : (
+        {!isBorrower && (
           <Badge tone="brand" icon={<Building className="size-3.5" />}>
             Loan servicing
           </Badge>
@@ -78,20 +71,23 @@ export function Dashboard({
           ) : (
             <LenderLoanCard />
           )}
-          <TransactionHistory
-            transactions={relevant}
-            activeAccount={activeAccount}
-            counterpartyFor={(t) =>
-              t.fromAccountId === activeAccount.id
-                ? lender.id === t.toAccountId
-                  ? lender
-                  : borrower
-                : t.fromAccountId === borrower.id
-                  ? borrower
-                  : lender
-            }
-            onViewProof={onViewProof}
-          />
+          {/* Borrower's transactions live in the Activity tab */}
+          {!isBorrower && (
+            <TransactionHistory
+              transactions={relevant}
+              activeAccount={activeAccount}
+              counterpartyFor={(t) =>
+                t.fromAccountId === activeAccount.id
+                  ? lender.id === t.toAccountId
+                    ? lender
+                    : borrower
+                  : t.fromAccountId === borrower.id
+                    ? borrower
+                    : lender
+              }
+              onViewProof={onViewProof}
+            />
+          )}
         </div>
         {/* Sidebar (lender web view only): borrower's profile + counterparty live
             in the borrower's profile sheet / loan card instead. */}
@@ -149,19 +145,16 @@ function BorrowerLoanCard({ onStartRepayment }: { onStartRepayment: () => void }
         action={<Badge tone="brand">{(loan.apr * 100).toFixed(1)}% APR</Badge>}
       />
       <div className="px-5 py-5">
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-xs text-ink-subtle">Outstanding balance</p>
-            <p className="text-2xl font-semibold tracking-tight text-ink">
-              {formatMoney(loan.outstanding)}
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-xs text-ink-subtle">Monthly installment</p>
-            <p className="text-lg font-semibold text-ink">{formatMoney(loan.installment)}</p>
-          </div>
-        </div>
+        {/* hero: outstanding balance */}
+        <p className="text-xs text-ink-subtle">Outstanding balance</p>
+        <p className="text-3xl font-semibold tracking-tight text-ink">
+          {formatMoney(loan.outstanding)}
+        </p>
+        <p className="mt-0.5 text-xs text-ink-subtle">
+          of {formatMoney(loan.principal)} borrowed
+        </p>
 
+        {/* progress */}
         <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-xs text-ink-muted">
             <span>
@@ -177,16 +170,19 @@ function BorrowerLoanCard({ onStartRepayment }: { onStartRepayment: () => void }
           </div>
         </div>
 
-        <div className="mt-4 rounded-xl border border-warn-soft bg-warn-soft/60 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm text-warn">
-            <Clock className="size-4" />
-            Next payment due {formatDate(loan.nextDueDate)}
-          </div>
-          <Button variant="warn" className="mt-3 w-full" onClick={onStartRepayment}>
-            Pay {formatMoney(loan.installment)}
-            <ArrowRight className="size-4" />
-          </Button>
+        {/* key facts */}
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <Stat label="Monthly installment" value={formatMoney(loan.installment)} />
+          <Stat label="Next payment" value={formatDate(loan.nextDueDate)} tone="warn" />
         </div>
+      </div>
+
+      {/* pay action */}
+      <div className="border-t border-line p-4">
+        <Button variant="warn" className="w-full" onClick={onStartRepayment}>
+          Pay {formatMoney(loan.installment)}
+          <ArrowRight className="size-4" />
+        </Button>
       </div>
     </Card>
   );
@@ -241,12 +237,17 @@ function Stat({
 }: {
   label: string;
   value: string;
-  tone?: "neutral" | "verify";
+  tone?: "neutral" | "verify" | "warn";
 }) {
   return (
     <div className="rounded-xl border border-line bg-surface-2 px-3 py-3">
       <p className="text-[11px] uppercase tracking-wide text-ink-subtle">{label}</p>
-      <p className={cn("mt-0.5 text-sm font-semibold", tone === "verify" ? "text-verify-strong" : "text-ink")}>
+      <p
+        className={cn(
+          "mt-0.5 text-sm font-semibold",
+          tone === "verify" ? "text-verify-strong" : tone === "warn" ? "text-warn" : "text-ink",
+        )}
+      >
         {value}
       </p>
     </div>

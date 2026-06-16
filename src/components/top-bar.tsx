@@ -4,14 +4,16 @@ import { useApp } from "@/lib/store";
 import { Avatar, cn } from "./ui";
 import { Scale, ShieldCheck, Exchange, Wallet as WalletIcon } from "./icons";
 
-export type View = "dashboard" | "proofs";
+export type View = "dashboard" | "activity" | "proofs";
 
 export function TopBar({
   view,
   onView,
+  showNav = true,
 }: {
   view: View;
   onView: (v: View) => void;
+  showNav?: boolean;
 }) {
   const { accounts, activeAccount, setActiveAccount, reset } = useApp();
 
@@ -29,15 +31,17 @@ export function TopBar({
           </div>
         </div>
 
-        {/* nav */}
-        <nav className="ml-2 flex items-center gap-1 rounded-xl bg-surface-2 p-1">
-          <NavButton active={view === "dashboard"} onClick={() => onView("dashboard")} icon={<WalletIcon className="size-4" />}>
-            Dashboard
-          </NavButton>
-          <NavButton active={view === "proofs"} onClick={() => onView("proofs")} icon={<Scale className="size-4" />}>
-            Proofs
-          </NavButton>
-        </nav>
+        {/* nav (lender web view; the borrower phone uses its own bottom nav) */}
+        {showNav && (
+          <nav className="ml-2 flex items-center gap-1 rounded-xl bg-surface-2 p-1">
+            <NavButton active={view === "dashboard"} onClick={() => onView("dashboard")} icon={<WalletIcon className="size-4" />}>
+              Dashboard
+            </NavButton>
+            <NavButton active={view === "proofs"} onClick={() => onView("proofs")} icon={<Scale className="size-4" />}>
+              Proofs
+            </NavButton>
+          </nav>
+        )}
 
         <div className="ml-auto flex items-center gap-2">
           <button
