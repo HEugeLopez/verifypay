@@ -93,11 +93,14 @@ export function Dashboard({
             onViewProof={onViewProof}
           />
         </div>
-        <div className="min-w-0 space-y-4">
-          {/* Borrower's profile lives in the tap-to-open profile sheet, not here */}
-          {!isBorrower && <ProfileCard account={activeAccount} />}
-          <CounterpartyCard account={isBorrower ? lender : borrower} loanRef={loan.reference} />
-        </div>
+        {/* Sidebar (lender web view only): borrower's profile + counterparty live
+            in the borrower's profile sheet / loan card instead. */}
+        {!isBorrower && (
+          <div className="min-w-0 space-y-4">
+            <ProfileCard account={activeAccount} />
+            <CounterpartyCard account={borrower} loanRef={loan.reference} />
+          </div>
+        )}
       </div>
     </div>
   );
