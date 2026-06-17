@@ -63,16 +63,18 @@ export function Dashboard({
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="min-w-0 space-y-4 lg:col-span-2">
+      {isBorrower ? (
+        /* Phone: always a single full-width column (no desktop grid). */
+        <div className="space-y-4">
           <WalletCard account={activeAccount} />
-          {isBorrower ? (
-            <BorrowerLoanCard onStartRepayment={onStartRepayment} />
-          ) : (
+          <BorrowerLoanCard onStartRepayment={onStartRepayment} />
+        </div>
+      ) : (
+        /* Lender web view: responsive two-column layout. */
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="min-w-0 space-y-4 lg:col-span-2">
+            <WalletCard account={activeAccount} />
             <LenderLoanCard />
-          )}
-          {/* Borrower's transactions live in the Activity tab */}
-          {!isBorrower && (
             <TransactionHistory
               transactions={relevant}
               activeAccount={activeAccount}
@@ -87,17 +89,13 @@ export function Dashboard({
               }
               onViewProof={onViewProof}
             />
-          )}
-        </div>
-        {/* Sidebar (lender web view only): borrower's profile + counterparty live
-            in the borrower's profile sheet / loan card instead. */}
-        {!isBorrower && (
+          </div>
           <div className="min-w-0 space-y-4">
             <ProfileCard account={activeAccount} />
             <CounterpartyCard account={borrower} loanRef={loan.reference} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
