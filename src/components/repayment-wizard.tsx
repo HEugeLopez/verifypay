@@ -276,7 +276,7 @@ export function RepaymentWizard({
               </div>
               <ReceiptCard tx={tx} cert={cert} from={borrower} to={lender} proof={txProof} />
               <MasterProofPanel master={master} cert={cert} tx={tx} txProof={txProof} />
-              <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="flex flex-col gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => onViewProof(tx.id)}>
                   Open in proof explorer
                 </Button>

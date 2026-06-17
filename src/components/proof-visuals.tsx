@@ -61,7 +61,7 @@ export function CertificateCard({ cert }: { cert: IdentityCertificate }) {
         </Badge>
       </div>
 
-      <div className="grid gap-x-6 gap-y-1 px-5 py-4 sm:grid-cols-2">
+      <div className="grid gap-x-6 gap-y-1 px-5 py-4 @md:grid-cols-2">
         <Field label="Subject" value={cert.subject} />
         {typeAttr && <Field label="Credential" value={typeAttr.value} />}
         {cert.assuranceLevel && (
@@ -130,7 +130,7 @@ export function TransactionSummary({
         </div>
         <Party account={to} caption="To" align="right" />
       </div>
-      <div className="grid gap-x-6 gap-y-1 border-t border-line px-5 py-4 sm:grid-cols-2">
+      <div className="grid gap-x-6 gap-y-1 border-t border-line px-5 py-4 @md:grid-cols-2">
         {tx.loanRef && <Field label="Loan reference" value={tx.loanRef} />}
         <Field label="Date" value={formatDateTime(tx.createdAt)} />
         <Field
@@ -298,7 +298,7 @@ export function MasterProofPanel({
 
       {/* Merkle tree */}
       <div className="px-5 py-5">
-        <div className="grid gap-2 sm:grid-cols-3">
+        <div className="grid gap-2 @md:grid-cols-3">
           {master.leaves.map((leaf) => (
             <div key={leaf.refId} className="rounded-xl border border-line bg-surface-2 p-3">
               <div className="mb-2 flex items-center gap-2 text-ink-muted">
@@ -429,7 +429,7 @@ export function ReceiptCard({
         <p className="mt-1 text-sm text-ink-muted">{tx.memo}</p>
       </div>
 
-      <div className="grid gap-x-6 border-t border-line px-5 py-4 sm:grid-cols-2">
+      <div className="grid gap-x-6 border-t border-line px-5 py-4 @md:grid-cols-2">
         <Field label="From" value={from?.displayName} />
         <Field label="To" value={to?.displayName} />
         {tx.loanRef && <Field label="Loan reference" value={tx.loanRef} />}
