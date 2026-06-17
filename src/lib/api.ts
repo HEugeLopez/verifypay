@@ -283,6 +283,27 @@ export const proofApi = {
       source: "local",
     };
 
+    // Identity binding attached to the proof's signed metadata: a KYC verdict
+    // plus references to the verified credential (hashes/DID, not raw PII).
+    const holderDid = cert.attributes.find(
+      (a) => a.name.toLowerCase() === "id" || a.value.startsWith("did:"),
+    )?.value;
+    const metadata = {
+      compliance: { kyc: "Pass", status: "COMPLIANT" },
+      identity: {
+        issuer: cert.issuer,
+        method: cert.method?.[0] ?? "OpenID4VP",
+        verificationStatus: cert.status,
+        verifiedAt: cert.verifiedAt,
+        assuranceLevel: cert.assuranceLevel ?? null,
+        subjectHash: cert.subjectHash,
+        certHash,
+        holderDid: holderDid ?? null,
+        correlationId: cert.tng?.correlationId ?? null,
+        definitionId: cert.tng?.definitionId ?? null,
+      },
+    };
+
     // Try the real Proof Fabric Protocol service via our server route.
     try {
       const res = await fetch("/api/proof/generate", {
@@ -296,6 +317,7 @@ export const proofApi = {
           payerId: tx.fromAccountId,
           payeeId: tx.toAccountId,
           timestamp: tx.createdAt,
+          metadata,
         }),
       });
       const data = await res.json();

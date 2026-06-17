@@ -15,6 +15,7 @@ export interface FEAGenerateInput {
   currency: string; // 3-letter ISO
   payerId: string;
   payeeId: string;
+  metadata?: Record<string, unknown>; // free-form; binds external data (e.g. identity) into the signed payload
 }
 
 export interface FEAArtifact {
@@ -62,6 +63,7 @@ export const proofFabric = {
         currency: input.currency,
         payer_id: input.payerId,
         payee_id: input.payeeId,
+        ...(input.metadata ? { metadata: input.metadata } : {}),
       }),
     });
   },

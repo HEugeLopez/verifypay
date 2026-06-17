@@ -217,6 +217,10 @@ export function TransactionProofCard({ proof }: { proof: TransactionProof }) {
             )}
             {proof.feaPublicKeyId && <Badge tone="neutral">key {proof.feaPublicKeyId}</Badge>}
           </div>
+          <p className="mt-2.5 flex items-center gap-1.5 text-xs text-verify-strong">
+            <ShieldCheck className="size-3.5" />
+            KYC Pass · identity verification bound in the signed proof metadata
+          </p>
         </div>
       )}
       <div className="border-t border-line bg-surface-2 px-5 py-3">

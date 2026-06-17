@@ -19,6 +19,7 @@ export async function POST(request: Request) {
       currency: b.currency,
       payerId: b.payerId,
       payeeId: b.payeeId,
+      metadata: b.metadata, // identity binding (V.C refs + KYC verdict)
     });
     return Response.json({ ok: true, artifact });
   } catch (e) {
