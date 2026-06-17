@@ -66,9 +66,6 @@ export default function LoginPage() {
             Unlock
           </button>
         </form>
-        <p className="mt-5 text-center text-[11px] text-ink-subtle">
-          VerifyPay · build deploycheck-7f3a
-        </p>
       </div>
     </div>
   );
