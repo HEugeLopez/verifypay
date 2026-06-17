@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { WalletQR } from "./wallet-qr";
 import { identityApi, paymentsApi, proofApi } from "@/lib/api";
 import type { IdentityStatus, PresentationRequest } from "@/lib/api";
@@ -12,7 +12,7 @@ import type {
   Transaction,
   TransactionProof,
 } from "@/lib/types";
-import { Avatar, Badge, Button, Card, cn } from "./ui";
+import { Avatar, Badge, Button, cn } from "./ui";
 import {
   CertificateCard,
   MasterProofPanel,
@@ -88,6 +88,7 @@ export function RepaymentWizard({
   const memo = `Loan repayment · installment ${installmentNo} of ${loan.installmentsTotal}`;
 
   const currentStepIndex = STEPS.findIndex((s) => s.key === step);
+  const allDoneLabelIndex = step === "done" ? STEPS.length - 1 : currentStepIndex;
 
   // --- step actions ---------------------------------------------------------
 
@@ -158,60 +159,67 @@ export function RepaymentWizard({
   return (
     <div
       className={cn(
-        "z-40 flex items-start justify-center overflow-y-auto bg-ink/40 backdrop-blur-sm",
-        contained ? "absolute inset-0 p-3" : "fixed inset-0 p-4 sm:p-8",
+        "z-40 overflow-y-auto bg-ink/40 backdrop-blur-sm",
+        contained
+          ? "absolute inset-x-0 bottom-0 top-[44px] p-3"
+          : "fixed inset-0 flex items-start justify-center p-4 sm:p-8",
       )}
     >
-      <div className={cn("w-full vp-pop", contained ? "max-w-full" : "max-w-2xl")}>
-        {/* header */}
-        <div className="mb-3 flex items-center justify-between rounded-2xl border border-line bg-surface px-4 py-3 shadow-[var(--shadow-card)]">
-          <div className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <ShieldCheck className="size-5 text-brand" />
-            New loan repayment
+      <div className={cn("mx-auto w-full vp-pop", contained ? "max-w-full" : "max-w-2xl")}>
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-[var(--shadow-card)]">
+          {/* header */}
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-ink">
+              <ShieldCheck className="size-5 text-brand" />
+              New loan repayment
+            </div>
+            <button
+              onClick={onClose}
+              className="flex size-8 items-center justify-center rounded-lg text-ink-subtle hover:bg-surface-2 hover:text-ink"
+            >
+              <X />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-lg text-ink-subtle hover:bg-surface-2 hover:text-ink"
-          >
-            <X />
-          </button>
-        </div>
 
-        {/* stepper */}
-        <div className="mb-3 flex items-center gap-1 rounded-2xl border border-line bg-surface px-3 py-3 shadow-[var(--shadow-card)]">
-          {STEPS.map((s, i) => {
-            const done = i < currentStepIndex || step === "done";
-            const active = i === currentStepIndex && step !== "done";
-            return (
-              <div key={s.key} className="flex flex-1 items-center gap-1">
-                <div
-                  className={cn(
-                    "flex flex-1 items-center gap-2 rounded-xl px-2.5 py-1.5 transition-colors",
-                    active && "bg-brand-soft text-brand-strong",
-                    done && !active && "text-verify-strong",
-                    !active && !done && "text-ink-subtle",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex size-6 items-center justify-center rounded-full",
-                      active && "bg-brand text-white",
-                      done && !active && "bg-verify text-white",
-                      !active && !done && "bg-surface-2",
+          {/* stepper */}
+          <div className="border-b border-line px-4 py-3">
+            <div className="flex items-center">
+              {STEPS.map((s, i) => {
+                const allDone = step === "done";
+                const done = allDone || i < currentStepIndex;
+                const active = !allDone && i === currentStepIndex;
+                return (
+                  <Fragment key={s.key}>
+                    {i > 0 && (
+                      <div
+                        className={cn(
+                          "mx-1.5 h-0.5 flex-1 rounded-full",
+                          done || active ? "bg-verify" : "bg-line",
+                        )}
+                      />
                     )}
-                  >
-                    {done && !active ? <Check className="size-3.5" /> : s.icon}
-                  </span>
-                  <span className="hidden text-xs font-medium sm:block">{s.label}</span>
-                </div>
-                {i < STEPS.length - 1 && <div className="h-px w-2 bg-line" />}
-              </div>
-            );
-          })}
-        </div>
+                    <span
+                      className={cn(
+                        "flex size-7 shrink-0 items-center justify-center rounded-full",
+                        active && "bg-brand text-white",
+                        done && "bg-verify text-white",
+                        !active && !done && "bg-surface-2 text-ink-subtle",
+                      )}
+                    >
+                      {done ? <Check className="size-3.5" /> : s.icon}
+                    </span>
+                  </Fragment>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-center text-xs font-medium text-ink-muted">
+              Step {Math.min(currentStepIndex + 1, STEPS.length)} of {STEPS.length} ·{" "}
+              {STEPS[allDoneLabelIndex].label}
+            </p>
+          </div>
 
-        {/* body */}
-        <div className="space-y-4">
+          {/* body */}
+          <div>
           {step === "identity" && (
             <IdentityStep
               phase={idPhase}
@@ -241,7 +249,7 @@ export function RepaymentWizard({
           )}
 
           {step === "sealing" && (
-            <Card className="px-5 py-8">
+            <div className="px-5 py-8">
               <div className="mb-6 flex flex-col items-center text-center">
                 <span className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-brand-soft text-brand">
                   <Scale />
@@ -252,11 +260,11 @@ export function RepaymentWizard({
                 </p>
               </div>
               <StageList stages={SEAL_STAGES} current={stage} />
-            </Card>
+            </div>
           )}
 
           {step === "done" && tx && cert && master && txProof && (
-            <div className="space-y-4">
+            <div className="space-y-4 p-4">
               <div className="flex flex-col items-center py-2 text-center vp-fade-up">
                 <span className="mb-2 flex size-14 items-center justify-center rounded-full bg-verify text-white vp-pulse-ring">
                   <Check className="size-7" />
@@ -278,6 +286,7 @@ export function RepaymentWizard({
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>
@@ -306,7 +315,7 @@ function IdentityStep({
   onContinue: () => void;
 }) {
   return (
-    <Card className="px-5 py-6">
+    <div className="px-5 py-6">
       {phase === "intro" && (
         <div className="vp-fade-up">
           <div className="mb-5 flex flex-col items-center text-center">
@@ -387,7 +396,7 @@ function IdentityStep({
           </Button>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -417,7 +426,7 @@ function ReviewStep({
   onConfirm: () => void;
 }) {
   return (
-    <Card className="px-5 py-6 vp-fade-up">
+    <div className="px-5 py-6 vp-fade-up">
       <h3 className="mb-1 text-base font-semibold text-ink">Review your repayment</h3>
       <p className="mb-5 text-sm text-ink-muted">{memo}</p>
 
@@ -480,7 +489,7 @@ function ReviewStep({
           Confirm &amp; pay {formatMoney(amount, borrower.currency)}
         </Button>
       </div>
-    </Card>
+    </div>
   );
 }
 
