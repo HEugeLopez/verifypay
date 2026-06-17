@@ -91,7 +91,7 @@ export function ProofsView({
               </Section>
 
               <Section step={3} title="Transaction proof (payment ↔ identity)">
-                <TransactionProofCard proof={txProof} />
+                <TransactionProofCard proof={txProof} cert={cert} />
               </Section>
 
               <Section step={4} title="Proof of everything" tone="brand">

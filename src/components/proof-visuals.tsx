@@ -176,7 +176,13 @@ function Party({
 
 // --- Transaction proof ------------------------------------------------------
 
-export function TransactionProofCard({ proof }: { proof: TransactionProof }) {
+export function TransactionProofCard({
+  proof,
+  cert,
+}: {
+  proof: TransactionProof;
+  cert?: IdentityCertificate;
+}) {
   return (
     <Card>
       <CardHeader
@@ -221,6 +227,16 @@ export function TransactionProofCard({ proof }: { proof: TransactionProof }) {
             <ShieldCheck className="size-3.5" />
             KYC Pass · identity verification bound in the signed proof metadata
           </p>
+          {cert?.tng?.credentialId && (
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <HashChip label="V.C id" value={cert.tng.credentialId} tone="verify" />
+              {cert.tng.credentialTypes?.map((t) => (
+                <Badge key={t} tone="neutral">
+                  {t}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       )}
       <div className="border-t border-line bg-surface-2 px-5 py-3">

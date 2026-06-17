@@ -296,8 +296,13 @@ export const proofApi = {
         verificationStatus: cert.status,
         verifiedAt: cert.verifiedAt,
         assuranceLevel: cert.assuranceLevel ?? null,
+        // hashes
         subjectHash: cert.subjectHash,
         certHash,
+        // references to the verified credential (V.C)
+        certificateId: cert.id,
+        credentialId: cert.tng?.credentialId ?? null,
+        credentialTypes: cert.tng?.credentialTypes ?? null,
         holderDid: holderDid ?? null,
         correlationId: cert.tng?.correlationId ?? null,
         definitionId: cert.tng?.definitionId ?? null,
