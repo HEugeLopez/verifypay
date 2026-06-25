@@ -65,6 +65,29 @@ export const DEMO_CREDENTIALS: DemoCredential[] = [
       { claimName: "licenseRestrictionsConditions", claimValue: "Corrective lenses" },
     ],
   },
+  {
+    // Cross-border "banking standing" credential — issued by the holder's home
+    // bank, presented at a destination bank to onboard a relocating customer.
+    // NOTE: for the LIVE issue flow this credentialId must exist as a schema in
+    // your TNG tenant; until then the /onboard demo falls back gracefully.
+    credentialId: "bankStandingCredential",
+    name: "Banking Standing",
+    icon: "bank",
+    summary: "Meridian Bank · Lagos",
+    description: "Verified relationship, tenure & payment history",
+    issuer: "Meridian Bank, Lagos",
+    gradient: "linear-gradient(140deg, #0ea5a4 0%, #0e7490 55%, #0c4a6e 100%)",
+    claims: [
+      { claimName: "fullName", claimValue: "Amara Okafor" },
+      { claimName: "principalBank", claimValue: "Meridian Bank, Lagos" },
+      { claimName: "customerSince", claimValue: "2013" },
+      { claimName: "accountStanding", claimValue: "Good standing" },
+      { claimName: "paymentHistory", claimValue: "No defaults · 12 yrs on-time" },
+      { claimName: "monthlyInflow", claimValue: "3,200 GBP-equiv" },
+      { claimName: "averageBalance", claimValue: "12,400 GBP-equiv" },
+      { claimName: "homeCountry", claimValue: "Nigeria" },
+    ],
+  },
 ];
 
 export function getDemoCredential(id: string): DemoCredential | undefined {

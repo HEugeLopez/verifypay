@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local-only (not for the public repo)
+.next-onboard/
+/deck/
+/COMMERCIAL-OVERVIEW.md
+/IDENTITY-STRATEGY.md
