@@ -10,6 +10,7 @@ import { RepaymentWizard } from "@/components/repayment-wizard";
 import { ProfileSheet } from "@/components/profile-sheet";
 import { PhoneFrame } from "@/components/phone-frame";
 import { PhoneNav } from "@/components/phone-nav";
+import { DemoSwitcher } from "@/components/demo-switcher";
 import { useApp } from "@/lib/store";
 
 export default function Page() {
@@ -56,6 +57,7 @@ export default function Page() {
 
   return (
     <div className="flex min-h-full flex-col">
+      <DemoSwitcher current="loan" />
       <TopBar view={view} onView={setView} showNav={!isBorrower} />
       <main className="flex-1">
         {isBorrower ? (

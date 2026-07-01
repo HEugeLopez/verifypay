@@ -9,6 +9,7 @@ import { PhoneFrame } from "./phone-frame";
 import { WalletQR } from "./wallet-qr";
 import { Button, Card, Badge, HashChip, cn } from "./ui";
 import { ShieldCheck, Check } from "./icons";
+import { DemoSwitcher } from "./demo-switcher";
 
 // ---------------------------------------------------------------------------
 // Cross-border "bring your banking history" demo.
@@ -177,6 +178,7 @@ export function OnboardFlow() {
 
   return (
     <div className="flex min-h-full flex-col">
+      <DemoSwitcher current="onboard" />
       <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4">
         <div className="flex items-center gap-2">
           <span className="flex size-7 items-center justify-center rounded-lg bg-brand text-brand-ink">
@@ -184,7 +186,7 @@ export function OnboardFlow() {
           </span>
           <div className="leading-tight">
             <p className="text-sm font-semibold text-ink">Albion Bank · Newcomer onboarding</p>
-            <p className="text-xs text-ink-subtle">Bring your banking history</p>
+            <p className="text-xs text-ink-subtle">Take your banking with you</p>
           </div>
         </div>
         <Badge tone="brand">Cross-border identity demo</Badge>
@@ -267,20 +269,20 @@ function Welcome({ onStart }: { onStart: () => void }) {
           <ShieldCheck className="size-7" />
         </span>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">
-          New to the UK?
+          Leaving the country?
           <br />
-          Bring your banking history.
+          Take your banking with you.
         </h1>
         <p className="mt-3 text-sm text-ink-muted">
-          Most newcomers start as a &ldquo;thin file&rdquo; — rejected, deposit-gated, charged more.
-          Present a verified standing credential from your home bank and Albion Bank can onboard you
-          in minutes.
+          Store your verified banking standing in your own wallet before you go — then present it to
+          any bank, anywhere, and skip the &ldquo;thin file&rdquo; treatment that leaves newcomers
+          rejected, deposit-gated and charged more.
         </p>
         <ul className="mt-5 space-y-2.5">
           {[
-            "Your home bank vouches for your real history",
-            "Cryptographically verified, bound to your identity",
-            "Unlock a real credit card & mortgage — not a secured card",
+            "Your home bank signs your standing into your wallet",
+            "You hold it — verified and bound to your identity",
+            "Present it anywhere to unlock real products, not a secured card",
           ].map((t) => (
             <li key={t} className="flex items-start gap-2.5 text-sm text-ink">
               <Check className="mt-0.5 size-4 shrink-0 text-verify" />

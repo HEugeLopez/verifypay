@@ -16,6 +16,8 @@ export interface DemoCredential {
   issuer: string; // display issuer
   gradient: string; // CSS background for the credential card
   claims: DemoClaim[];
+  /** Only used by the cross-border onboarding demo; hidden from the loan wallet. */
+  onboardOnly?: boolean;
 }
 
 export const DEMO_CREDENTIALS: DemoCredential[] = [
@@ -77,6 +79,7 @@ export const DEMO_CREDENTIALS: DemoCredential[] = [
     description: "Verified relationship, tenure & payment history",
     issuer: "Meridian Bank, Lagos",
     gradient: "linear-gradient(140deg, #0ea5a4 0%, #0e7490 55%, #0c4a6e 100%)",
+    onboardOnly: true,
     claims: [
       { claimName: "fullName", claimValue: "Amara Okafor" },
       { claimName: "principalBank", claimValue: "Meridian Bank, Lagos" },

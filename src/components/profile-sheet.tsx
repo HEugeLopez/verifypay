@@ -31,6 +31,7 @@ const ICONS = { bank: Building, email: Mail, license: IdCard } as const;
 export function ProfileSheet({ onClose }: { onClose: () => void }) {
   const { borrower } = useApp();
   const p = borrower.profile;
+  const walletCredentials = DEMO_CREDENTIALS.filter((c) => !c.onboardOnly);
 
   return (
     <div className="absolute inset-x-0 bottom-0 top-[44px] z-40 overflow-y-auto bg-[var(--color-canvas)] vp-fade-up">
@@ -68,14 +69,14 @@ export function ProfileSheet({ onClose }: { onClose: () => void }) {
           </div>
         </Card>
 
-        {/* wallet credentials (all claimed) */}
+        {/* wallet credentials (all claimed) — onboarding-only ones are excluded */}
         <div>
           <div className="mb-2 flex items-center justify-between px-1">
             <h3 className="text-sm font-semibold text-ink">Wallet credentials</h3>
-            <span className="text-xs text-ink-subtle">{DEMO_CREDENTIALS.length} held</span>
+            <span className="text-xs text-ink-subtle">{walletCredentials.length} held</span>
           </div>
           <div className="space-y-3">
-            {DEMO_CREDENTIALS.map((def) => (
+            {walletCredentials.map((def) => (
               <CredentialItem key={def.credentialId} def={def} />
             ))}
           </div>
