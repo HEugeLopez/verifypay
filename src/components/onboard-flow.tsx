@@ -82,7 +82,19 @@ export function OnboardFlow() {
   const [proof, setProof] = useState<TransactionProof | null>(null);
   const [proofState, setProofState] = useState<"idle" | "sealing" | "done">("idle");
 
+  // preflight: does this deployment's TNG key actually authenticate?
+  const [health, setHealth] = useState<{ tng: string; detail?: string } | null>(null);
+
   useEffect(() => () => { pollRef.current.stop = true; }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/identity/preflight")
+      .then((r) => r.json())
+      .then((d) => active && setHealth(d))
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   // --- issue ---------------------------------------------------------------
   const runIssue = useCallback(async () => {
@@ -198,6 +210,7 @@ export function OnboardFlow() {
       <main className="flex-1">
         <PhoneFrame>
           <div className="flex min-h-full flex-col px-5 pb-8 pt-3">
+            {health && <HealthBanner tng={health.tng} detail={health.detail} />}
             {/* stepper */}
             {stage !== "welcome" && (
               <div className="mb-4 flex items-center gap-1.5">
@@ -264,6 +277,34 @@ export function OnboardFlow() {
 }
 
 // === Stages ================================================================
+
+function HealthBanner({ tng, detail }: { tng: string; detail?: string }) {
+  if (!tng || tng === "ok") return null;
+  const bad = tng === "unauthorized" || tng === "error";
+  const title =
+    tng === "unauthorized"
+      ? "TNG credentials invalid (401)"
+      : tng === "unconfigured"
+        ? "TNG not configured"
+        : "TNG check failed";
+  const body =
+    tng === "unauthorized"
+      ? "This deployment's TNG key is invalid or expired — issue & present fall back to demo mode. Update TNG_IDENTITY_API_KEY / TNG_IDENTITY_ENV_HASH and redeploy."
+      : tng === "unconfigured"
+        ? "No TNG credentials on this deployment — running in demo mode."
+        : detail || "Could not reach TNG.";
+  return (
+    <div
+      className={cn(
+        "mb-3 rounded-xl px-3 py-2.5",
+        bad ? "bg-danger-soft" : "bg-warn-soft",
+      )}
+    >
+      <p className={cn("text-xs font-semibold", bad ? "text-danger" : "text-warn")}>{title}</p>
+      <p className="mt-0.5 break-words text-[11px] leading-snug text-ink-muted">{body}</p>
+    </div>
+  );
+}
 
 function Welcome({ onStart }: { onStart: () => void }) {
   return (
