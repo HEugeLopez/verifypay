@@ -69,6 +69,7 @@ export function OnboardFlow() {
   // issue (home bank)
   const [issueState, setIssueState] = useState<"idle" | "loading" | "offered" | "unavailable">("idle");
   const [offerUri, setOfferUri] = useState<string>("");
+  const [issueNote, setIssueNote] = useState<string>("");
 
   // present (destination bank)
   const [presState, setPresState] = useState<"idle" | "awaiting" | "verified" | "error">("idle");
@@ -97,9 +98,11 @@ export function OnboardFlow() {
         setOfferUri(data.offer.claimUri);
         setIssueState("offered");
       } else {
+        setIssueNote(data?.error ?? "The issuer did not return a credential offer.");
         setIssueState("unavailable");
       }
-    } catch {
+    } catch (e) {
+      setIssueNote(e instanceof Error ? e.message : "Issuer unreachable.");
       setIssueState("unavailable");
     }
   }, []);
@@ -216,6 +219,7 @@ export function OnboardFlow() {
               <IssueStep
                 state={issueState}
                 offerUri={offerUri}
+                note={issueNote}
                 onIssue={runIssue}
                 onContinue={() => setStage("present")}
               />
@@ -331,14 +335,17 @@ function StandingCard() {
 function IssueStep({
   state,
   offerUri,
+  note,
   onIssue,
   onContinue,
 }: {
   state: "idle" | "loading" | "offered" | "unavailable";
   offerUri: string;
+  note: string;
   onIssue: () => void;
   onContinue: () => void;
 }) {
+  const isAuth = /401|unauthorized/i.test(note);
   return (
     <div className="flex flex-1 flex-col vp-fade-up">
       <StepHead
@@ -377,10 +384,13 @@ function IssueStep({
       {state === "unavailable" && (
         <div className="vp-fade-up">
           <Card className="mb-4 bg-warn-soft px-4 py-3">
-            <p className="text-sm font-medium text-warn">Live issuance not wired yet</p>
-            <p className="mt-1 text-xs text-ink-muted">
-              The <span className="font-mono">bankStandingCredential</span> schema isn&apos;t in this
-              TNG tenant. Continuing in demo mode with the standing above.
+            <p className="text-sm font-medium text-warn">
+              {isAuth ? "Issuer rejected the API key (401)" : "Live issuance unavailable"}
+            </p>
+            <p className="mt-1 break-words text-xs text-ink-muted">
+              {isAuth
+                ? "The TNG credentials on this deployment are invalid or expired — update TNG_IDENTITY_API_KEY / TNG_IDENTITY_ENV_HASH and redeploy."
+                : note || "Continuing in demo mode with the standing above."}
             </p>
           </Card>
           <Button className="w-full" onClick={onContinue}>
