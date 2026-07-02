@@ -18,6 +18,10 @@ export interface DemoCredential {
   claims: DemoClaim[];
   /** Only used by the cross-border onboarding demo; hidden from the loan wallet. */
   onboardOnly?: boolean;
+  /** Issue against a different (existing) TNG schema than the app-level credentialId. */
+  issueAs?: string;
+  /** Claims sent to the issuer when they differ from the display claims (must fit `issueAs`). */
+  issueClaims?: DemoClaim[];
 }
 
 export const DEMO_CREDENTIALS: DemoCredential[] = [
@@ -89,6 +93,21 @@ export const DEMO_CREDENTIALS: DemoCredential[] = [
       { claimName: "monthlyInflow", claimValue: "3,200 GBP-equiv" },
       { claimName: "averageBalance", claimValue: "12,400 GBP-equiv" },
       { claimName: "homeCountry", claimValue: "Nigeria" },
+    ],
+    // bankStandingCredential isn't a schema in this TNG tenant, so mint a real
+    // V.C against the existing bankAccountCredential schema (Meridian/Lagos
+    // values). The display claims above still tell the standing story.
+    issueAs: "bankAccountCredential",
+    issueClaims: [
+      { claimName: "fullName", claimValue: "Amara Okafor" },
+      { claimName: "accountNumber", claimValue: "0044120981" },
+      { claimName: "accountType", claimValue: "Checking Account" },
+      { claimName: "bankName", claimValue: "Meridian Bank" },
+      { claimName: "bankBranch", claimValue: "Lagos, NG" },
+      { claimName: "routingNumber", claimValue: "058152036" },
+      { claimName: "address", claimValue: "12 Marina Rd, Lagos, Nigeria" },
+      { claimName: "identificationNumber", claimValue: "ID-4471" },
+      { claimName: "accountBalance", claimValue: "12400.55" },
     ],
   },
 ];

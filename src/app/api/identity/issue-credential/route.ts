@@ -24,8 +24,11 @@ export async function POST(request: Request) {
     );
   }
   try {
-    const offer = await tngIssuer.issueCredential(def.credentialId, def.claims);
-    return Response.json({ ok: true, offer, claims: def.claims, credentialName: def.name });
+    // Some display credentials mint against a different (existing) TNG schema.
+    const issuerCredentialId = def.issueAs ?? def.credentialId;
+    const issueClaims = def.issueClaims ?? def.claims;
+    const offer = await tngIssuer.issueCredential(issuerCredentialId, issueClaims);
+    return Response.json({ ok: true, offer, claims: issueClaims, credentialName: def.name });
   } catch (e) {
     return Response.json(
       { ok: false, error: e instanceof Error ? e.message : String(e) },
